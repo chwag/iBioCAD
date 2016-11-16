@@ -1,0 +1,30 @@
+<html lang="en">
+<head>
+<meta http-equiv="refresh" content="3;url=http://ibiocadsite.web.engr.illinois.edu:8080" />
+    <script>
+	function setHref() {
+	document.getElementById('modify-me').href = window.location.protocol + "//" + window.location.hostname + ":8080/other/";
+	}
+    </script>
+<style>
+    .loader {
+    margin-top: 15%;
+    left: 40%;
+    position: absolute;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+</head>
+<body onload="setTimeout(setHref,3000)">
+    <img class="loader" width="400" height="400" src="http://ibiocadsite.web.engr.illinois.edu/cgi-bin/iBioCAD/images/ibiocad_loader.png" alt="Welcome to iBioCAD! Please wait while the page loads...">
+    <h2>
+        <a href="http://ibiocadsite.web.engr.illinois.edu:8080" id="modify-me" style="display:none">
+        </a>
+    </h2>
+</body>
+</html>

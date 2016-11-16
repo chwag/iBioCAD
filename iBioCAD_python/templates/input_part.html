@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<style>
+    {{css}}
+</style>
+<script>
+    function dynamicSwitch() {
+        document.getElementById("static").style = "display: none"
+        document.getElementById("dynamic").style = "display: block!important"
+    }
+    function staticSwitch() {
+        document.getElementById("static").style = "display: block"
+        document.getElementById("dynamic").style = "display: none"
+    }
+</script>
+<head>
+    <meta charset="UTF-8">
+    <title>Input New Part</title>
+</head>
+{%if dynamic == "yes" %}
+<body onload="dynamicSwitch();">
+{%else%}
+<body>
+{%endif%}
+    <div class="ui raised segment container" style="top:10%;width:30%;">
+    <form method="POST" class="ui form" enctype="multipart/form-data">
+        {%if dynamic == "yes" %}
+        <script>dynamicSwitch();</script>
+        <input type="radio" name="input_type" value="static" onchange="staticSwitch()"> Static
+        <input type="radio" name="input_type" value="dynamic" onchange="dynamicSwitch()" checked> Dynamic
+        {%else%}
+        <input type="radio" name="input_type" value="static" onchange="staticSwitch()" checked> Static
+        <input type="radio" name="input_type" value="dynamic" onchange="dynamicSwitch()"> Dynamic
+        {%endif%}
+    <div id="static">
+    <div class="required field">
+        <label>Name</label>
+            <input type="text" style="border-color:black;" name="name" value={{name}}>
+        {%if nameerror %}
+        <div style="color:red;">{{nameerror}}</div>
+        {%endif%}
+    </div>
+    <div class="field">
+        <label>Type</label>
+            <select name="type" style="border-color:black;">
+                <option value="Promoter" {%if type=="Promoter"%}selected{%endif%}>Promoter</option>
+                <option value="CDS" {%if type=="CDS"%}selected{%endif%}>CDS</option>
+                <option value="Terminator" {%if type=="Terminator"%}selected{%endif%}>Terminator</option>
+                <option value="RBS" {%if type=="RBS"%}selected{%endif%}>RBS</option>
+                <option value="oriR" {%if type=="oriR"%}selected{%endif%}>oriR</option>
+            </select>
+    </div>
+    <div class="required field">
+        <label>Sequence</label>
+            <textarea style="border-color:black;" name="sequence">{{sequence}}</textarea>
+        {%if sequenceerror %}
+        <div style="color:red;">{{sequenceerror}}</div>
+        {%endif%}
+    </div>
+    <div class="field">
+        <label>Description</label>
+            <input type="text" style="border-color:black;" name="description" value={{description}}>
+    </div>
+    </div>
+    <div id="dynamic" style="display:none">
+        <div class="required field">
+        <label>Name</label>
+            <input type="text" style="border-color:black;" name="dynname" value={{dynname}}>
+        {%if dynnameerror %}
+        <div style="color:red;">{{dynnameerror}}</div>
+        {%endif%}
+        </div>
+        <div class="required field">
+            <label>File(s)</label>
+            <input type="file" style="border-color:black;" name="files" multiple>
+            {%if fileerror %}
+            <div style="color:red;">{{fileerror}}</div>
+            {%endif%}
+        </div>
+    </div>
+    <br>
+    <button type="submit" class="ui blue button" name="add_part" value="add">Add Part</button>
+    <button type="submit" class="ui red button" name="cancel" value="cancel">Cancel</button>
+    </form>
+    </div>
+</body>
+</html>

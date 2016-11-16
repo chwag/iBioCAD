@@ -1,0 +1,442 @@
+#dialog-primers .ui-button-text {
+	font-size: 10px;
+	padding: 1px 1px 1px 1px; /* Or whatever makes it small enough. */
+}
+
+.ui.another.small.modal {
+	width: 450px;
+	height: 500px;
+	left: 450px;
+	top: 300px;
+	margin: -50px 0px 0px -50px;
+}
+
+.ui.special.small.modal{
+	width: 450px;
+	left: 450px;
+	top: 300px;
+	margin: -50px 0px 0px -50px;
+}
+
+.ui.first.wizard.small.modal{
+	width: 500px;
+	left: 450px;
+	top: 300px;
+	margin: -50px 0px 0px -50px;
+}
+
+#HTdesignFont {
+
+	font-family:"arial";
+	font-size:14px;
+	font-weight:bold;
+	color: rgb(60,60,60);
+	outline-color: black thick;
+	text-transform:none;
+}
+
+.ui.recommend.small.modal {
+	width: 450px;
+	left: 450px;
+	top: 300px;
+	margin: -50px 0px 0px -50px;
+}
+
+body {
+	margin:0;
+	font-family:"arial";
+	font-size:12px;
+	font-weight:bold;
+	text-align:center;
+}
+
+label {
+	font-family:"arial";
+	font-size:14px;
+	font-weight:bold;
+	color: rgb(60,60,60);
+	outline-color: black thick;
+	text-transform:none;
+}
+
+textarea {
+	font-family:"arial";
+	font-size:14px;
+	font-weight:normal;
+	color: black;
+	outline-color: black thick;
+	text-transform:none;
+}
+
+input {
+	font-family:"arial";
+	font-size:14px;
+	font-weight:normal;
+	color: black;
+	outline-color: black thick;
+	text-transform:none;
+}
+
+#assembleWin {
+	font-family:"arial";
+	font-size:14px;
+	font-weight:bold;
+	color: red;
+	outline-color: black thick;
+	text-transform:none;
+}
+
+#yourchoice {
+	font-family:"arial";
+	font-size:14px;
+	font-style:italic;
+	font-weight:bold;
+	color: red;
+	outline-color: black thick;
+	text-transform:none;
+}
+
+#iBioCADchoice {
+	font-family:"arial";
+	font-size:14px;
+	font-weight:bold;
+	color: red;
+	outline-color: black thick;
+	text-transform:none;
+}
+
+#revDirLabel {
+	font-family:"arial";
+	font-size:13px;
+	font-weight:normal;
+	color: rgb(60,60,60);
+	outline-color: black thick;
+	text-transform:none;
+}
+#wrapper {
+	margin:auto;
+	padding:0px;
+	border:10px solid #fff;
+	text-align:left;
+}
+#logo-top-left {
+	margin: 0px;
+	padding:10px;
+	border:10px solid #fff;
+	display: inline;
+	float: left;
+}
+
+#logo-top-right {
+	margin: 0px;
+	padding:10px;
+	border:10px solid #fff;
+	display: inline;
+	float: right;
+}
+#export {
+	font-size: 12px;
+	font-weight: bold;
+	float:right;
+	margin-top: 0px;
+	padding:10px;
+	display: flex;
+	background-color: red;
+	color: white;
+}
+
+#wrapper-font {
+	font-size:14px;
+}
+
+#fileinput {
+	font-family:"arial";
+	font-size:14px;
+	font-weight:normal;
+	color: white;
+	outline-color: black thick;
+	text-transform:none;
+    padding-left: 11px;
+    padding-right: 11px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+#type {
+	font-family:"arial";
+	font-size:14px;
+	font-weight:normal;
+	color: black;
+	outline-color: black thick;
+	text-transform:none;
+}
+
+#designMode {
+	font-family:"arial";
+	font-size:14px;
+	font-weight:normal;
+	color: black;
+	outline-color: black thick;
+	text-transform:none;
+}
+
+div {
+	margin-bottom:0px;
+	padding:0px;
+}
+
+
+h2 {
+	font-size:12px;
+	text-align:center;
+}
+p {
+	font-size:14px;
+	font-weight:bold;
+	color: black;
+	text-transform:none;
+	text-align:left;
+	line-height:0.5;
+}
+
+canvas {
+	margin-top: 25px;
+	margin-left: 40px;
+	width: 100%;
+	/*height: 100%;*/
+	float:center;
+}
+
+#export_map {
+	position: absolute;
+	right:550;
+	bottom:100;
+	font-family:"arial";
+	font-size:14px;
+}
+
+
+#delete_map {
+	position: absolute;
+	right:455;
+	bottom:100;
+	font-family:"arial";
+	font-size:14px;
+}
+
+#delete_seqs {
+	position: absolute;
+	right:320;
+	bottom:100;
+	font-family:"arial";
+	font-size:14px;
+}
+
+#save_construct {
+	position: absolute;
+	right:205;
+	bottom:100;
+	font-family:"arial";
+	font-size:14px;
+}
+
+#load_construct {
+	position: absolute;
+	right:90;
+	bottom:100;
+	font-family:"arial";
+	font-size:14px;
+}
+
+#header {
+	height:60px;
+}
+
+#container
+{
+	width: 90%;
+	height: 400px;
+	margin-top: 30px;
+	margin-bottom: 10px;
+	margin-left: auto;
+	margin-right: auto;
+	background-color: white;
+	color: #333;
+	border: 2px solid rgb(72,119,209);
+	border-radius: 0.8em;
+}
+
+#top
+{
+	padding: .5em;
+	background-color: rgb(72,119,209);
+	border-bottom: 1px solid rgb(72,119,209);
+	height: 9%;
+	border-radius: 0.5em 0.5em 0.0em 0.0em;
+	display: flex;
+}
+
+#top h1
+{
+	padding: 0;
+	margin: 0;
+	font-family:"arial";
+	font-size:20px;
+	font-weight:normal;
+	color: white;
+	outline-color: black thick;
+}
+
+#column-left
+{
+	float: left;
+	height: 91%;
+	width: 225px;
+	margin: 0;
+	padding: 1em;
+}
+
+#column-right
+{
+	margin-left: 220px;
+	border-left: 1px solid rgb(72,119,209);
+	height:91%;
+	padding: 1em;
+}
+
+#copyright{
+	padding-left: 2%;
+	padding-right: 5%;
+	/*margin-right: 140px;*/
+	font-family:"arial";
+	font-size:14px;
+	font-weight:normal;
+	font-style: italic;
+	color: black;
+	margin-top: 1%;
+	float: left;
+}
+
+#logo-bottom-left {
+	margin-left: 40px;
+	padding:0px;
+	border:0px solid #fff;
+	display: inline;
+	float: left;
+}
+
+#assemble_buttons {
+	font-family:"arial";
+	font-size:14px;
+	font-weight:bold;
+	color:white;
+	text-transform: none;
+}
+
+.ui.celled.two.column.table.segment {
+	background-color: white;
+	font-family:"arial";
+	font-size:14px;
+	font-weight:bold;
+	color:black;
+	text-transform: none;
+	text-align: left;
+}
+
+/*.th-1{
+	width: 100px;
+	}*/
+
+	test{
+		width: 200px;
+	}
+
+.ui.blue.buttons .button,
+.ui.blue.button {
+  background-color: #6ECFF5!important;
+  color: #FFFFFF;
+  text-shadow: none;
+  background-image: none;
+}
+.ui.blue.buttons .button:hover,
+.ui.blue.button:hover {
+  background-color: #1AB8F3!important;
+  color: #FFFFFF;
+  text-shadow: none;
+}
+#Assembly_Method {
+    font-weight: 500;
+    font-size: 13px;
+    padding-left:0px;
+    padding-right:0px;
+}
+.ui.red.buttons .button,
+.ui.red.button {
+    background-color: #D95C5C!important;
+    color: #FFFFFF;
+    text-shadow: none;
+    background-image: none;
+}
+.ui.red.buttons .button:hover,
+.ui.red.button:hover {
+  background-color: #E75859!important;
+  color: #FFFFFF;
+  text-shadow: none;
+}
+.ui.green.buttons .button,
+.ui.green.button {
+  background-color: #5BBD72!important;
+  color: #FFFFFF;
+  text-shadow: none;
+  background-image: none;
+}
+.ui.green.buttons .button:hover,
+.ui.green.button:hover {
+  background-color: #58cb73!important;
+  color: #FFFFFF;
+  text-shadow: none;
+}
+
+[draggable] {
+    user-select: none;
+}
+
+#part_map {
+    margin-left: 10%;
+	margin-right: 10%;
+	margin-top: auto;
+	margin-bottom: auto;
+	padding: 0;
+	width: 80%;
+    text-align: center;
+	display:flex;
+	position: relative;
+	top: -44%;
+}
+#plasmid_container {
+	margin-top: 6%;
+	border-color: black;
+	border: 5px solid;
+	height: 60%;
+	border-radius: 15px;
+}
+#plasmid_container:before {
+	content: '';
+	height: 5px;
+	display:block;
+	position: relative;
+	border: 1px solid white;
+	border-left: 10px solid white;
+	border-right: 10px solid white;
+	left:10%;
+	width: 80%;
+	top: -5px;
+}
+
+.plasmid_part {
+	margin: 0!important;
+	padding: 0!important;
+	height:100px;
+	width:100px;
+	position:relative
+}

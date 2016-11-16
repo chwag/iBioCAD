@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>iBioCAD</title>
+    <style>
+        {{css}}
+    </style>
+    <script>
+        var source;
+        function allowDrop(e) {
+            e.preventDefault();
+        }
+        function isbefore(a, b) {
+            if (a.parentNode == b.parentNode) {
+                for (var cur = a; cur; cur = cur.previousSibling) {
+                    if (cur === b) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        function getIndex(child) {
+            var i = 0;
+            while( (child = child.previousSibling) != null )
+                i++;
+            return i
+        }
+        function exportmap() {
+            var plasmidparts = document.getElementsByClassName("plasmid_part");
+            var parts=""
+            for (i=0;i<plasmidparts.length;i++) {
+                parts += plasmidparts.item(i).id + "|";
+            }
+            var export_sites = document.getElementsByClassName("export_dom");
+            for (i=0;i<export_sites.length;++i) {
+                export_sites[i].setAttribute("value",parts);
+            }
+        }
+        function delSeq(e) {
+            e.preventDefault()
+            if (e.target == document.getElementById("trash")){
+                if (document.getElementById("deleted_seqs").getAttribute("value") != "") {
+                    document.getElementById("deleted_seqs").setAttribute("value",(document.getElementById("deleted_seqs").getAttribute("value") + "|" + source.getAttribute("id")));
+                }
+                else {
+                    document.getElementById("deleted_seqs").setAttribute('value', source.getAttribute("id"));
+                }
+                var label_id = "label:" + source.getAttribute("id");
+                var label = document.getElementById(label_id);
+                if (document.getElementsByClassName("plasmid_part").length == 1) {
+                    document.getElementsByName("delete_map")[0].click()
+                }
+                if (document.getElementsByClassName("plasmid_part").length > 1) {
+                    label.parentNode.removeChild(label);
+                    source.parentNode.removeChild(source);
+                    exportmap();
+                    document.getElementById('bottom_form').submit();
+                }
+            }
+        }
+
+function dragenter(e) {
+    if (isbefore(source, e.target)) {
+        e.target.parentNode.insertBefore(source, e.target);
+    }
+    else {
+        e.target.parentNode.insertBefore(source, e.target.nextSibling);
+    }
+}
+
+function dragstart(e) {
+    source = e.target;
+    e.dataTransfer.effectAllowed = 'move';
+}
+    </script>
+</head>
+<body style="background-color: white;" class="ui dimmable">
+    <div id="wrapper">
+        <div class="container">
+            <div id="log-top" class="ui secondary menu">
+                <a id="wrapper-font" class="item">
+                <!-- <img src="/home/ibiocadsite/public_html/cgi-bin/iBioCAD/images/ibiocad_logo.png" alt="iBioCAD" height="120" width="120"> -->
+                <img class="ui image" src="http://web.engr.illinois.edu/~tohidif2/iBioCAD/img/ibiocad_logo.png" alt="iBioCAD height=" 120" width="120" ">
+                </a>
+                <a id="wrapper-font" class="active item" style="padding-top:7px;padding-bottom:7px;padding-left:14px;padding-right:14px;margin-left:3.5px;margin-right:3.5px;">
+                    Design
+                </a>
+                <a id="wrapper-font" class="active item" style="padding-top:7px;padding-bottom:7px;padding-left:14px;padding-right:14px;margin-left:3.5px;margin-right:3.5px;">
+                    Documentation
+                </a>
+                <form method="post" style="display: flex">
+                <button id="wrapper-font" class="item button" type="submit" name="login" value="goto_login">Login</button>
+                    <button id="wrapper-font" class="ui item button" type="submit" name="logout" value="goto_logout">Logout</button>
+                </form>
+                <a id="export" class="active right floated item button">
+                    Export to the Scheduler
+                </a>
+                <a id="logo-top-right" class = "item" style="margin-left:0px">
+                    <img class="ui image" src="http://web.engr.illinois.edu/~tohidif2/iBioCAD/img/iBioFab_logo.png" alt="iBioFab height="60" width="130" ">
+                </a>
+
+            </div>
+        </div>
+        <div id="container">
+            <div id="top">
+                <h1>Plasmid Design</h1>
+            </div>
+            <div id="column-left">
+                <form method="post" id="input_form_left" class="ui mini form raised segment" enctype="multipart/form-data">
+                    <div class="field">
+                        <label id="fileinput" for="file" class="mini middle fluid ui blue button">
+                            Import from file
+                        </label>
+                        <input type="file" onchange="this.form.submit()" id="file" name="file_input" style="display:none">
+                    </div>
+                    <div class="field">
+                        <button class="mini ui middle fluid blue button" id="fileinput" type="submit" name="input_part" value="goto_input_window">Input New Part</button>
+                    </div>
+                    <div class="field">
+                        <button id="fileinput" class="mini ui middle fluid red button" type="submit" name="htpWiz" value="goto_htpWiz">High-throughput wizard</button>
+                    </div>
+                    {%if parts_list|length >= 2 %}
+                    <svg height="20">
+                        <circle id="readyCircle" cx="55" cy="10" r="7" fill="green" stroke="#000000" stroke-width="2"></circle>
+                        <text x="0" y="15" font-family="arial" font-size="13px" fill="black">Ready</text>
+                    </svg>
+                    {%else%}
+                    <svg height="20">
+                        <circle id="readyCircle" cx="55" cy="10" r="7" fill="red" stroke="#000000" stroke-width="2"></circle>
+                        <text x="0" y="15" font-family="arial" font-size="13px" fill="black">Ready</text>
+                    </svg>
+                    {%endif%}
+                </form>
+                {%if golden_gate_error == "" %}
+                <form method="post" target="_blank" onsubmit="setTimeout(function () { window.location.reload(); }, 10)" class="ui form raised segment" enctype="multipart/form-data" style="padding-left:5px;padding-right:5px;margin-top:0px;">
+                {%else%}
+                <form method="post" class="ui form raised segment" enctype="multipart/form-data" style="padding-left:5px;padding-right:5px;margin-top:0px;">
+                {%endif%}
+                    <p style="font-family:arial;color:black;font-size:14px;margin-bottom:10px;">Assembly Method</p>
+                    <select id="Assembly_Method" class="compact" name="assembly_method" style="margin-bottom:15px">
+                        <option value="Yeast_Assembly">Yeast Assembly</option>
+                        <option value="Gibson_Assembly">Gibson Assembly</option>
+                        <option value="LCR">LCR</option>
+                        <option value="Type_II_Restriction_Enzyme">Type II Restriction Enzyme</option>
+                    </select>
+                    <button type="submit" id="fileinput" class="ui mini fluid green button" onclick="exportmap()" >Assemble</button>
+                    <input type="text" class="export_dom" style="display: none;" name="export_dom" value="">
+                </form>
+            </div>
+            <div id="column-right">
+                <div id="plasmid_container" class="ui fluid container" style={{"max-width:"~(10 + parts_list|length*10)|string ~ "%!important"}}>
+                <div id="part_map" class="ui horizontal list">
+                {%for part in parts_list %}
+                {%if part.type=="Promoter" %}
+                <img id={{part.name~","~part.type~","~part.sequence~","~part.description}} onmouseover={{"document.getElementById('"~"label:"~part.name~","~part.type~","~part.sequence~","~part.description~"').style.display='block';"}} onmouseout={{"document.getElementById('"~"label:"~part.name~","~part.type~","~part.sequence~","~part.description~"').style.display='none';"}} src="http://ibiocadsite.web.engr.illinois.edu/cgi-bin/iBioCAD/images/promoter_graphic.svg" class="plasmid_part item" draggable="true" ondrag={{"document.getElementById('"~"label:"~part.name~","~part.type~","~part.sequence~","~part.description~"').style.display='none';this.style.display='none';"}} ondragend={{"document.getElementById('"~"label:"~part.name~","~part.type~","~part.sequence~","~part.description~"').style.display='block';this.style.display='inherit';"}} ondragenter="dragenter(event)" ondragstart="dragstart(event)" alt={{part.name~","~part.type ~ ':' ~ part.sequence|length ~ "bp"}} style={{"width:" ~ (100/parts_list|length) ~ "%;height:150px;"}}>-->
+                {%elif part.type=="CDS" %}
+                <img id={{part.name~","~part.type~","~part.sequence~","~part.description}} onmouseover={{"document.getElementById('"~"label:"~part.name~","~part.type~","~part.sequence~","~part.description~"').style.display='block';"}} onmouseout={{"document.getElementById('"~"label:"~part.name~","~part.type~","~part.sequence~","~part.description~"').style.display='none';"}} src="http://ibiocadsite.web.engr.illinois.edu/cgi-bin/iBioCAD/images/cds_graphic.svg" class="plasmid_part item" draggable="true" ondrag={{"document.getElementById('"~"label:"~part.name~","~part.type~","~part.sequence~","~part.description~"').style.display='none';this.style.display='none';"}} ondragend={{"document.getElementById('"~"label:"~part.name~","~part.type~","~part.sequence~","~part.description~"').style.display='block';this.style.display='inherit';"}} ondragenter="dragenter(event)" ondragstart="dragstart(event)" alt={{part.name~","~part.type ~ ':' ~ part.sequence|length ~ "bp"}} style={{"width:" ~ (100/parts_list|length) ~ "%;height:150px;"}}>
+                {%elif part.type=="Terminator" %}
+                <img id={{part.name~","~part.type~","~part.sequence~","~part.description}} onmouseover={{"document.getElementById('"~"label:"~part.name~","~part.type~","~part.sequence~","~part.description~"').style.display='block';"}} onmouseout={{"document.getElementById('"~"label:"~part.name~","~part.type~","~part.sequence~","~part.description~"').style.display='none';"}} src="http://ibiocadsite.web.engr.illinois.edu/cgi-bin/iBioCAD/images/terminator_graphic.svg" class="plasmid_part item" draggable="true" ondrag={{"document.getElementById('"~"label:"~part.name~","~part.type~","~part.sequence~","~part.description~"').style.display='none';this.style.display='none';"}} ondragend={{"document.getElementById('"~"label:"~part.name~","~part.type~","~part.sequence~","~part.description~"').style.display='block';this.style.display='inherit';"}} ondragenter="dragenter(event)" ondragstart="dragstart(event)" alt={{part.name~","~part.type ~ ':' ~ part.sequence|length ~ "bp"}} style={{"width:" ~ (100/parts_list|length) ~ "%;height:150px;"}}>
+                {%elif part.type=="RBS" %}
+                <img id={{part.name~","~part.type~","~part.sequence~","~part.description}} onmouseover={{"document.getElementById('"~"label:"~part.name~","~part.type~","~part.sequence~","~part.description~"').style.display='block';"}} onmouseout={{"document.getElementById('"~"label:"~part.name~","~part.type~","~part.sequence~","~part.description~"').style.display='none';"}} src="http://ibiocadsite.web.engr.illinois.edu/cgi-bin/iBioCAD/images/rbs_graphic.svg" class="plasmid_part item" draggable="true" ondrag={{"document.getElementById('"~"label:"~part.name~","~part.type~","~part.sequence~","~part.description~"').style.display='none';this.style.display='none';"}} ondragend={{"document.getElementById('"~"label:"~part.name~","~part.type~","~part.sequence~","~part.description~"').style.display='block';this.style.display='inherit';"}} ondragenter="dragenter(event)" ondragstart="dragstart(event)" alt={{part.name~","~part.type ~ ':' ~ part.sequence|length ~ "bp"}} style={{"width:" ~ (100/parts_list|length) ~ "%;height:150px;"}}>
+                {%elif part.type=="oriR" %}
+                <img id={{part.name~","~part.type~","~part.sequence~","~part.description}} onmouseover={{"document.getElementById('"~"label:"~part.name~","~part.type~","~part.sequence~","~part.description~"').style.display='block';"}} onmouseout={{"document.getElementById('"~"label:"~part.name~","~part.type~","~part.sequence~","~part.description~"').style.display='none';"}} src="http://ibiocadsite.web.engr.illinois.edu/cgi-bin/iBioCAD/images/orir_graphic.svg" class="plasmid_part item" draggable="true" ondrag={{"document.getElementById('"~"label:"~part.name~","~part.type~","~part.sequence~","~part.description~"').style.display='none';this.style.display='none';"}} ondragend={{"document.getElementById('"~"label:"~part.name~","~part.type~","~part.sequence~","~part.description~"').style.display='block';this.style.display='inherit';"}} ondragenter="dragenter(event)" ondragstart="dragstart(event)" alt={{part.name~","~part.type ~ ':' ~ part.sequence|length ~ "bp"}} style={{"width:" ~ (100/parts_list|length) ~ "%;height:150px;"}}>
+                {%elif part.type=="MultiPart"%}
+                <img id={{part.name~","~part.type}} onmouseover={{"document.getElementById('"~"label:"~part.name~","~part.type~"').style.display='block';"}} onmouseout={{"document.getElementById('"~"label:"~part.name~","~part.type~"').style.display='none';"}} src="http://ibiocadsite.web.engr.illinois.edu/cgi-bin/iBioCAD/images/user-defined.svg" class="plasmid_part item" draggable="true" ondrag={{"document.getElementById('"~"label:"~part.name~","~part.type~"').style.display='none';this.style.display='none';"}} ondragend={{"document.getElementById('"~"label:"~part.name~","~part.type~"').style.display='block';this.style.display='inherit';"}} ondragenter="dragenter(event)" ondragstart="dragstart(event)" alt={{part.name~","~part.type}} style={{"width:" ~ (100/parts_list|length) ~ "%;height:150px;"}}>
+                {%endif%}
+                {%if part.type=="MultiPart"%}
+                <div id={{"label:"~part.name~","~part.type}} style="display:none;left:35%;width:35%;bottom:auto;top:100%;overflow:hidden;background-color:rgb(72,119,209)!important;" class="ui bottom attached blue label">{{part.name}}<br>User-defined</div>
+                {%else%}
+                <div id={{"label:"~part.name~","~part.type~","~part.sequence~","~part.description}} style="display:none;left:35%;width:30%;bottom:auto;top:100%;overflow:hidden;background-color:rgb(72,119,209)!important;" class="ui bottom attached blue label">{{part.name}}<br>{{part.sequence|length}} base pairs</div>
+                {%endif%}
+                {%endfor%}
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="ui fluid container">
+    <a id="logo-bottom-left" class="ui tiny rounded image">
+        <img src="http://ibiocadsite.web.engr.illinois.edu/cgi-bin/iBioCAD/images/uiuc_logo.png" alt="UIUC height=" 40" width="40" ">
+    </a>
+    <a id="copyright">
+        © Copyright 2014 University of Illinois at Urbana-Champaign
+        <br>
+        Institute for Genomic Biology
+    </a>
+
+    <form method="post" id="bottom_form" style="display: inline-block">
+        <button type="submit" id="export_construct" class="ui small black button" name="export_map" value="export_map" onclick="exportmap()">Export Map</button>
+        <input type="text" class="export_dom" style="display: none;" name="export_dom" value="">
+        <button type="submit" class="ui small black button" name="delete_map" value="TERMINATE">Delete Map</button>
+        <div class="ui basic black button" ondragover="allowDrop(event)" ondrop="delSeq(event)" id="trash">Delete Sequences</div>
+        <input type="text" id="deleted_seqs" style="display:none;" name="deleted_seqs" value="">
+        <button formtarget="_blank" onsubmit="setTimeout(function () { window.location.reload(); }, 10)" type="submit" class="ui small black button" name="save_construct" value="save_construct" onclick="exportmap()">Save Construct</button>
+        <button type="submit" class="ui small black button" name="load_construct" value="load_construct">Load Construct</button>
+    </form>
+    </div>
+{%if golden_gate_error == "BsaI_in_seq" %}
+<script>
+    alert("A sequence contains a BsaI recognition site!");
+    window.open('', '_self', ''); window.close();
+</script>
+{%endif%}
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Assembly</title>
+    <style>
+        {{css}}
+    </style>
+</head>
+<body>
+    <div id="top" style="visibility: hidden"></div>
+    {%for parts_list in builds_list %}
+    <a href={{"#builds_list"~loop.index}} class="ui blue button" style="display: inline-flex">
+        {%for part in parts_list %}
+        {{part.name}}
+        {%if not loop.last %},
+        {%endif%}{%endfor%}
+    </a>
+    {%endfor%}
+{%for parts_list in builds_list %}
+    <div class="ui raised segment container" style="top:10%">
+        {%if parts_list[0].assembly_method == "Yeast_Assembly" or parts_list[0].assembly_method == "Gibson_Assembly" or parts_list[0].assembly_method == "Type_II_Restriction_Enzyme"%}
+        <div id={{"builds_list"~loop.index}} style="font-size: large">
+            {%for part in parts_list %}
+            {{part.name}}
+            {%if not loop.last %},
+            {%endif%}{%endfor%}
+            <br>
+            <br>
+        </div>
+        <a href={{data_uri}} class="ui green button" download={{filename}}>Export as CSV</a>
+        <a href="#top" class="ui blue button">Go to top</a>
+        <button type="submit" class="ui red button" onclick="window.open('', '_self', ''); window.close();">Go Back</button>
+        <table class="ui celled table" style="word-wrap:break-word;table-layout:fixed">
+            <thead>
+            <tr>
+                <th colspan="2" class="center aligned">Primers</th>
+            </tr>
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th>
+                    Sequence
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+                {%for part in parts_list%}
+                <tr>
+                    <td class="top aligned">{{part.name ~ ",forward"}}</td>
+                    <td class="top aligned">{{part.primer_forward}}</td>
+                </tr>
+                <tr>
+                    <td class="top aligned">{{part.name ~ ",reverse"}}</td>
+                    <td class="top aligned">{{part.primer_reverse}}</td>
+                </tr>
+                {%endfor%}
+            </tbody>
+        </table>
+        {%endif%}
+        {%if parts_list[0].assembly_method == "LCR"%}
+        <div id={{"builds_list"~loop.index}} style="font-size: large">
+            {%for part in parts_list %}
+            {{part.name}}
+            {%if not loop.last %},
+            {%endif%}{%endfor%}
+            <br>
+            <br>
+        </div>
+        <a href={{data_uri}} class="ui green button" download={{filename}}>Export as CSV</a>
+        <a href="#top" class="ui blue button">Go to top</a>
+        <button type="submit" class="ui red button" onclick="window.open('', '_self', ''); window.close();">Go Back</button>
+        <table class="ui celled table" style="word-wrap:break-word;table-layout:fixed">
+            <thead>
+            <tr>
+                <th colspan="2" class="center aligned">Bridges</th>
+            </tr>
+            <tr>
+                <th>
+                    Bridge
+                </th>
+                <th>
+                    Sequence
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+                {%for part in parts_list[:-1]%}
+                <tr>
+                    <td class="top aligned">{{part.name ~ "-" ~ parts_list[loop.index0+1].name}}</td>
+                    <td class="top aligned">{{part.bridge_with_next_part}}</td>
+                </tr>
+                {%endfor%}
+            </tbody>
+        </table>
+        {%endif%}
+        <a href={{data_uri}} class="ui green button" download={{filename}}>Export as CSV</a>
+        <a href="#top" class="ui blue button">Go to top</a>
+        <button type="submit" class="ui red button" onclick="window.open('', '_self', ''); window.close();">Go Back</button>
+        <table class="ui celled table" style="word-wrap:break-word;table-layout:fixed">
+            <thead>
+            <tr>
+                <th colspan="4" class="center aligned">Modified Parts</th>
+            </tr>
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th>
+                    Type
+                </th>
+                <th>
+                    Sequence
+                </th>
+                <th>
+                    Description
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+                {%for part in parts_list%}
+                <tr>
+                    <td class="top aligned">{{part.name}}</td>
+                    <td class="top aligned">{{part.type}}</td>
+                    <td class="top aligned">{{part.sequence}}</td>
+                    <td class="top aligned">{{part.description}}</td>
+                </tr>
+                {%endfor%}
+            </tbody>
+        </table>
+        <a href={{data_uri}} class="ui green button" download={{filename}}>Export as CSV</a>
+        <a href="#top" class="ui blue button">Go to top</a>
+        <button type="submit" class="ui red button" onclick="window.open('', '_self', ''); window.close();">Go Back</button>
+    </div>
+    <br>
+{%endfor%}
+</body>
+</html>
