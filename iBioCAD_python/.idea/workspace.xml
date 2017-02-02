@@ -15,17 +15,21 @@
   <component name="ChangesViewManager" flattened_view="true" show_ignored="false" />
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/iBioCAD_python$request.coverage" NAME="request Coverage Results" MODIFIED="1467968547875" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/AppData/Roaming/Python/Python35/site-packages/webob" />
+    <SUITE FILE_PATH="coverage/iBioCAD_python$golden_gate_opt__002_.coverage" NAME="golden_gate_opt (002) Coverage Results" MODIFIED="1485401548777" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/AppData/Local/Microsoft/Windows/INetCache/Content.Outlook/B2J5UI90" />
     <SUITE FILE_PATH="coverage/iBioCAD_python$setup_windows.coverage" NAME="setup_windows Coverage Results" MODIFIED="1469419624748" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/AppData/Local/Temp/Temp1_mysqlclient-python-master.zip/mysqlclient-python-master" />
     <SUITE FILE_PATH="coverage/iBioCAD_python$webapp2.coverage" NAME="webapp2 Coverage Results" MODIFIED="1468007677908" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/AppData/Roaming/Python/Python35/site-packages" />
     <SUITE FILE_PATH="coverage/iBioCAD_python$setup.coverage" NAME="setup Coverage Results" MODIFIED="1472826937472" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/Downloads/pysbol2-2.0.1b/pysbol2-2.0.1b" />
     <SUITE FILE_PATH="coverage/iBioCAD_python$Unittests_in_sbol_test.coverage" NAME="Unittests in sbol_test Coverage Results" MODIFIED="1472841130395" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/AppData/Roaming/Python/Python35/site-packages/sbol" />
     <SUITE FILE_PATH="coverage/iBioCAD_python$main.coverage" NAME="main Coverage Results" MODIFIED="1467513268411" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/web-dev-hw-1" />
     <SUITE FILE_PATH="coverage/iBioCAD_python$inspect_sbol_file.coverage" NAME="inspect_sbol_file Coverage Results" MODIFIED="1472840819194" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/AppData/Roaming/Python/Python35/site-packages/sbol/examples" />
+    <SUITE FILE_PATH="coverage/iBioCAD_python$golden_gate_opt.coverage" NAME="golden_gate_opt Coverage Results" MODIFIED="1485401702343" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/iBioCAD_python$test_file.coverage" NAME="test_file Coverage Results" MODIFIED="1469588753445" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/iBioCAD_python$ibiocad.coverage" NAME="ibiocad Coverage Results" MODIFIED="1478280745473" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/iBioCAD_python$ibiocad.coverage" NAME="ibiocad Coverage Results" MODIFIED="1485386409965" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/iBioCAD_python$ibiocad__2_.coverage" NAME="ibiocad (2) Coverage Results" MODIFIED="1485538484257" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/AppData/Local/Temp/b86217d5-bcb4-4ae1-bb5b-5466ea08ff42/var/www/ibiocad/iBioCAD" />
     <SUITE FILE_PATH="coverage/iBioCAD_python$sbol.coverage" NAME="sbol Coverage Results" MODIFIED="1472841024669" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/AppData/Roaming/Python/Python35/site-packages/sbol" />
     <SUITE FILE_PATH="coverage/iBioCAD_python$test.coverage" NAME="test Coverage Results" MODIFIED="1474588583506" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/iBioCAD_python$CRISPR_example.coverage" NAME="CRISPR_example Coverage Results" MODIFIED="1472844421281" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/AppData/Local/Programs/Python/Python35/Lib/site-packages/pySBOL-2.0.1b0-py3.5.egg/sbol" />
+    <SUITE FILE_PATH="coverage/iBioCAD_python$ibiocad__1_.coverage" NAME="ibiocad (1) Coverage Results" MODIFIED="1484775381216" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/AppData/Local/Temp/faef7ad8-cff4-439e-9b30-9aabf8555e75/var/www/ibiocad/iBioCAD" />
     <SUITE FILE_PATH="coverage/iBioCAD_python$Unittests_in_iBioCAD_python.coverage" NAME="Unittests in iBioCAD_python Coverage Results" MODIFIED="1476744750805" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="CreatePatchCommitExecutor">
@@ -47,9 +51,31 @@
       <file leaf-file-name="ibiocad.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/ibiocad.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.8968447">
-              <caret line="644" column="38" selection-start-line="644" selection-start-column="38" selection-end-line="644" selection-end-column="38" />
+            <state vertical-scroll-proportion="2.628641">
+              <caret line="623" column="31" selection-start-line="623" selection-start-column="31" selection-end-line="623" selection-end-column="31" />
               <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="golden_gate_opt.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/golden_gate_opt.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="26" column="15" selection-start-line="26" selection-start-column="15" selection-end-line="26" selection-end-column="15" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="welcome_page.html" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/templates/welcome_page.html">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="7" column="16" selection-start-line="7" selection-start-column="16" selection-end-line="7" selection-end-column="16" />
+              <folding>
+                <element signature="n#style#0;n#a#0;n#h2#0;n#body#0;n#html#0;n#!!top" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -58,7 +84,7 @@
         <entry file="file://$PROJECT_DIR$/templates/main_page.html">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="174" column="22" selection-start-line="174" selection-start-column="22" selection-end-line="174" selection-end-column="22" />
+              <caret line="142" column="28" selection-start-line="142" selection-start-column="28" selection-end-line="142" selection-end-column="28" />
               <folding>
                 <element signature="n#style#0;n#body#0;n#html#0;n#!!top" expanded="true" />
                 <element signature="n#style#0;n#a#1;n#div#0;n#div#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
@@ -69,6 +95,7 @@
                 <element signature="n#style#0;n#form#1;n#div#1;n#div#1;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
                 <element signature="n#style#0;n#form#0;n#form#1;n#div#1;n#div#1;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
                 <element signature="n#style#0;n#p#0;n#form#0;n#form#1;n#div#1;n#div#1;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
+                <element signature="n#style#0;n#img#0;n#a#0;n#p#0;n#form#0;n#form#1;n#div#1;n#div#1;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
                 <element signature="n#style#0;n#select#0;n#form#0;n#form#1;n#div#1;n#div#1;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
                 <element signature="n#style#0;n#input#0;n#form#0;n#form#1;n#div#1;n#div#1;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
                 <element signature="n#style#0;n#div#0;n#div#2;n#div#1;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
@@ -123,13 +150,18 @@
         <option value="$PROJECT_DIR$/sbol_rdf-xml_template.txt" />
         <option value="$PROJECT_DIR$/templates/construct_download.html" />
         <option value="$PROJECT_DIR$/templates/main_page.css" />
-        <option value="$PROJECT_DIR$/templates/welcome_page.html" />
         <option value="$PROJECT_DIR$/test.py" />
         <option value="$USER_HOME$/AppData/Roaming/Python/Python35/site-packages/webapp2.py" />
+        <option value="$PROJECT_DIR$/templates/input_part.html" />
         <option value="$PROJECT_DIR$/templates/assembly_page.html" />
         <option value="$PROJECT_DIR$/templates/main_page.html" />
-        <option value="$PROJECT_DIR$/templates/input_part.html" />
+        <option value="$PROJECT_DIR$/templates/config.html" />
+        <option value="$PROJECT_DIR$/templates/welcome_page.html" />
+        <option value="$USER_HOME$/AppData/Local/Temp/faef7ad8-cff4-439e-9b30-9aabf8555e75/var/www/ibiocad/iBioCAD/ibiocad.py" />
+        <option value="$PROJECT_DIR$/golden_gate_opt.py" />
         <option value="$PROJECT_DIR$/ibiocad.py" />
+        <option value="$USER_HOME$/AppData/Local/Temp/b86217d5-bcb4-4ae1-bb5b-5466ea08ff42/var/www/ibiocad/iBioCAD/ibiocad.py" />
+        <option value="$USER_HOME$/AppData/Local/Temp/b86217d5-bcb4-4ae1-bb5b-5466ea08ff42/var/log/httpd/ibiocad-error.log" />
       </list>
     </option>
   </component>
@@ -168,6 +200,8 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -228,8 +262,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scratches" />
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -251,15 +283,17 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Scott\AppData\Local\Temp\faef7ad8-cff4-439e-9b30-9aabf8555e75\var\www\ibiocad\iBioCAD" />
       <recent name="C:\Users\Scott\iBioCAD_python\templates" />
       <recent name="C:\Users\Scott\iBioCAD_python" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Scott\OneDrive\iBioCAD_python\templates" />
       <recent name="C:\Users\Scott\iBioCAD_python\templates" />
       <recent name="C:\Users\Scott\iBioCAD_python\static" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.ibiocad">
+  <component name="RunManager" selected="Python.ibiocad (2)">
     <configuration default="false" name="ibiocad" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -278,13 +312,25 @@
       <option name="SHOW_COMMAND_LINE" value="false" />
       <method />
     </configuration>
-    <configuration default="false" name="assembly_page.html" type="JavascriptDebugType" factoryName="JavaScript Debug" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/iBioCAD_python/templates/assembly_page.html">
+    <configuration default="false" name="ibiocad (1)" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$USER_HOME$/AppData/Local/Temp/faef7ad8-cff4-439e-9b30-9aabf8555e75/var/www/ibiocad/iBioCAD" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="iBioCAD_python" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$USER_HOME$/AppData/Local/Temp/faef7ad8-cff4-439e-9b30-9aabf8555e75/var/www/ibiocad/iBioCAD/ibiocad.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
       <method />
     </configuration>
-    <configuration default="false" name="welcome_page.html" type="JavascriptDebugType" factoryName="JavaScript Debug" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/iBioCAD_python/templates/welcome_page.html">
-      <method />
-    </configuration>
-    <configuration default="false" name="test" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration default="false" name="golden_gate_opt" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -297,32 +343,45 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="iBioCAD_python" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/golden_gate_opt.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <method />
     </configuration>
-    <configuration default="false" name="Unittests in iBioCAD_python" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+    <configuration default="false" name="golden_gate_opt (002)" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
-      <envs />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
+      <option name="WORKING_DIRECTORY" value="$USER_HOME$/AppData/Local/Microsoft/Windows/INetCache/Content.Outlook/B2J5UI90" />
+      <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="iBioCAD_python" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="" />
-      <option name="CLASS_NAME" value="" />
-      <option name="METHOD_NAME" value="" />
-      <option name="FOLDER_NAME" value="$PROJECT_DIR$" />
-      <option name="TEST_TYPE" value="TEST_FOLDER" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <option name="PUREUNITTEST" value="true" />
-      <option name="PARAMS" value="" />
-      <option name="USE_PARAM" value="false" />
+      <option name="SCRIPT_NAME" value="$USER_HOME$/AppData/Local/Microsoft/Windows/INetCache/Content.Outlook/B2J5UI90/golden_gate_opt (002).py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="ibiocad (2)" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$USER_HOME$/AppData/Local/Temp/b86217d5-bcb4-4ae1-bb5b-5466ea08ff42/var/www/ibiocad/iBioCAD" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="iBioCAD_python" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$USER_HOME$/AppData/Local/Temp/b86217d5-bcb4-4ae1-bb5b-5466ea08ff42/var/www/ibiocad/iBioCAD/ibiocad.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
       <method />
     </configuration>
     <configuration default="true" type="DjangoTestsConfigurationType" factoryName="Django tests">
@@ -520,18 +579,18 @@
     </configuration>
     <list size="5">
       <item index="0" class="java.lang.String" itemvalue="Python.ibiocad" />
-      <item index="1" class="java.lang.String" itemvalue="JavaScript Debug.assembly_page.html" />
-      <item index="2" class="java.lang.String" itemvalue="JavaScript Debug.welcome_page.html" />
-      <item index="3" class="java.lang.String" itemvalue="Python.test" />
-      <item index="4" class="java.lang.String" itemvalue="Python tests.Unittests in iBioCAD_python" />
+      <item index="1" class="java.lang.String" itemvalue="Python.ibiocad (1)" />
+      <item index="2" class="java.lang.String" itemvalue="Python.golden_gate_opt" />
+      <item index="3" class="java.lang.String" itemvalue="Python.golden_gate_opt (002)" />
+      <item index="4" class="java.lang.String" itemvalue="Python.ibiocad (2)" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python.ibiocad" />
-        <item index="1" class="java.lang.String" itemvalue="Python tests.Unittests in iBioCAD_python" />
-        <item index="2" class="java.lang.String" itemvalue="Python.test" />
-        <item index="3" class="java.lang.String" itemvalue="JavaScript Debug.welcome_page.html" />
-        <item index="4" class="java.lang.String" itemvalue="JavaScript Debug.assembly_page.html" />
+        <item index="0" class="java.lang.String" itemvalue="Python.ibiocad (2)" />
+        <item index="1" class="java.lang.String" itemvalue="Python.golden_gate_opt" />
+        <item index="2" class="java.lang.String" itemvalue="Python.golden_gate_opt (002)" />
+        <item index="3" class="java.lang.String" itemvalue="Python.ibiocad" />
+        <item index="4" class="java.lang.String" itemvalue="Python.ibiocad (1)" />
       </list>
     </recent_temporary>
   </component>
@@ -566,7 +625,7 @@
     <frame x="256" y="0" width="1408" height="990" extended-state="0" />
     <editor active="false" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.19064748" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.19064748" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32205367" sideWeight="0.5025566" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -579,7 +638,7 @@
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3990665" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.28938156" sideWeight="0.49744338" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.28704783" sideWeight="0.49744338" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32905483" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -624,41 +683,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$USER_HOME$/AppData/Roaming/Python/Python35/site-packages/webapp2_extras/securecookie.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.41328412">
-          <caret line="49" column="46" selection-start-line="49" selection-start-column="46" selection-end-line="49" selection-end-column="46" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/AppData/Roaming/Python/Python35/site-packages/webapp2_extras/sessions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-1.6642066">
-          <caret line="326" column="36" selection-start-line="326" selection-start-column="36" selection-end-line="326" selection-end-column="36" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/AppData/Roaming/Python/Python35/site-packages/pymysql/cursors.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-19.498156">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python35/Lib/html/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-3.3431735">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python35/Lib/html/entities.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python35/Lib/html/parser.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="-18.158672">
@@ -834,13 +858,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/templates/semantic.css">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.5980198">
-          <caret line="2735" column="1" selection-start-line="2735" selection-start-column="1" selection-end-line="2735" selection-end-column="1" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/plasmid_container.png">
       <provider selected="true" editor-type-id="images">
         <state />
@@ -914,13 +931,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/templates/welcome_page.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.9080675">
-          <caret line="22" column="34" selection-start-line="22" selection-start-column="34" selection-end-line="22" selection-end-column="34" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/templates/construct_download.html">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.49530956">
@@ -942,25 +952,24 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/AppData/Roaming/Python/Python35/site-packages/webapp2.py">
+    <entry file="file://$PROJECT_DIR$/templates/pET-26b.fa">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.7940663">
-          <caret line="1511" column="13" selection-start-line="1511" selection-start-column="13" selection-end-line="1511" selection-end-column="13" />
-          <folding />
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/templates/assembly_page.html">
+    <entry file="file://$PROJECT_DIR$/templates/semantic.css">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-6.387097">
-          <caret line="12" column="94" selection-start-line="12" selection-start-column="94" selection-end-line="12" selection-end-column="94" />
+        <state vertical-scroll-proportion="-190.98239">
+          <caret line="2735" column="1" selection-start-line="2735" selection-start-column="1" selection-end-line="2735" selection-end-column="1" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/templates/main_page.html">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="174" column="22" selection-start-line="174" selection-start-column="22" selection-end-line="174" selection-end-column="22" />
+          <caret line="142" column="28" selection-start-line="142" selection-start-column="28" selection-end-line="142" selection-end-column="28" />
           <folding>
             <element signature="n#style#0;n#body#0;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#a#1;n#div#0;n#div#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
@@ -971,6 +980,7 @@
             <element signature="n#style#0;n#form#1;n#div#1;n#div#1;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#form#0;n#form#1;n#div#1;n#div#1;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#p#0;n#form#0;n#form#1;n#div#1;n#div#1;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#img#0;n#a#0;n#p#0;n#form#0;n#form#1;n#div#1;n#div#1;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#select#0;n#form#0;n#form#1;n#div#1;n#div#1;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#input#0;n#form#0;n#form#1;n#div#1;n#div#1;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#div#0;n#div#2;n#div#1;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
@@ -984,17 +994,57 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/templates/assembly_page.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="5.199269">
+          <caret line="138" column="69" selection-start-line="138" selection-start-column="69" selection-end-line="138" selection-end-column="69" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Roaming/Python/Python35/site-packages/webapp2.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-8.584951">
+          <caret line="1511" column="13" selection-start-line="1511" selection-start-column="13" selection-end-line="1511" selection-end-column="13" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates/config.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="1.4990859">
+          <caret line="61" column="32" selection-start-line="61" selection-start-column="32" selection-end-line="61" selection-end-column="32" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates/welcome_page.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="7" column="16" selection-start-line="7" selection-start-column="16" selection-end-line="7" selection-end-column="16" />
+          <folding>
+            <element signature="n#style#0;n#a#0;n#h2#0;n#body#0;n#html#0;n#!!top" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/golden_gate_opt.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="26" column="15" selection-start-line="26" selection-start-column="15" selection-end-line="26" selection-end-column="15" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/templates/input_part.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.6862385">
-          <caret line="77" column="21" selection-start-line="77" selection-start-column="21" selection-end-line="77" selection-end-column="21" />
+        <state vertical-scroll-proportion="-12.67742">
+          <caret line="82" column="92" selection-start-line="82" selection-start-column="92" selection-end-line="82" selection-end-column="92" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/ibiocad.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.8968447">
-          <caret line="644" column="38" selection-start-line="644" selection-start-column="38" selection-end-line="644" selection-end-column="38" />
+        <state vertical-scroll-proportion="2.628641">
+          <caret line="623" column="31" selection-start-line="623" selection-start-column="31" selection-end-line="623" selection-end-column="31" />
           <folding />
         </state>
       </provider>

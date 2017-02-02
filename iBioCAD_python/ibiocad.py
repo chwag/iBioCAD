@@ -1,4 +1,4 @@
-#! /home/ibiocadsite/public_html/cgi-bin/iBioCAD/bin/python3
+######!/usr/bin/python
 
 print("Content-type: text/html\n\n")
 
@@ -9,7 +9,7 @@ May not be needed depending on the nature of the file manager/server
 (isn't needed if developer has access to usr/bin/python)
 '''
 import sys
-sys.path.append('/home/ibiocadsite/public_html/cgi-bin/iBioCAD/lib/python2.6/site-packages')
+#sys.path.append('/home/ibiocadsite/public_html/cgi-bin/iBioCAD/lib/python2.6/site-packages')
 try:
     reload(sys)
     sys.setdefaultencoding('UTF8')
@@ -29,7 +29,9 @@ import webapp2      #web framework
 import os
 import jinja2       #optional template rendering
 from Bio.SeqUtils import MeltingTemp as mt
+from Bio import SeqIO
 
+#path on local
 #import stylesheets and javascript for web pages
 with open('templates/main_page.css','r') as my_main_page_css_raw:
     my_main_page_css = my_main_page_css_raw.read()
@@ -40,8 +42,18 @@ with open('templates/semantic.min.js','r') as semantic_js_raw:
 css = my_main_page_css + semantic_css
 js = semantic_js
 
+#path on the server
+#with open('/var/www/ibiocad/iBioCAD/templates/main_page.css','r') as my_main_page_css_raw:
+    #my_main_page_css = my_main_page_css_raw.read()
+#with open('/var/www/ibiocad/iBioCAD/templates/semantic.min.css','r') as semantic_css_raw:
+    #semantic_css = semantic_css_raw.read()
+#with open('/var/www/ibiocad/iBioCAD/templates/semantic.min.js','r') as semantic_js_raw:
+    #semantic_js = semantic_js_raw.read()
+#css = my_main_page_css + semantic_css
+#js = semantic_js
+
 tkinter_use = False     #set to true to use a GUI window within a web handler
-server_debug = True     #set to false to disable the ability to restart a server process
+server_debug = False     #set to false to disable the ability to restart a server process
 
 '''
 Initialize jinja2 rendering
@@ -57,7 +69,8 @@ def render_string(template,**params):
     return t.render(params)
 def render(template,**kw):
     print(render_string(template,**kw))
-render("welcome_page.html",css=css,js=js)     #redirects to port 8080
+#shouldn't be needed anymore but I'll keep it here for future use
+#render("welcome_page.html",css=css,js=js)     #redirects to port 8080
 
 #Functions available throughout the framework
 class Handler(webapp2.RequestHandler):
@@ -131,6 +144,7 @@ class Part:
     primer_reverse = ""
     assembly_method = ""
     bridge_with_next_part = ""
+    bridge_with_previous_part = ""
 
 class MultiPart:
     def __init__(self,name,parts):
@@ -290,6 +304,15 @@ class MainHandler(Handler):
             parts_list,session_id = self.update_part_list()
             generateSBOLdoc(parts_list,session_id)
             self.redirect("/construct_download")
+        for record in SeqIO.parse("templates/pET-26b.fa","fasta"):
+            default_backbone = record
+        default_config = {"backbone":default_backbone}
+        parts_list,session_id = self.get_parts_list()
+        app = webapp2.get_app()
+        if "assembly_config" not in app.registry.get(session_id).keys() or app.registry[session_id]["assembly_config"] is None:
+            app.registry[session_id]["assembly_config"] = default_config
+        assembly_config = app.registry.get(session_id)["assembly_config"]
+        backbone_sequence = assembly_config["backbone"].seq
         #Run Yeast Assembly
         if self.request.POST.get("assembly_method") == "Yeast_Assembly":
             parts_list,session_id = self.update_part_list()
@@ -304,9 +327,9 @@ class MainHandler(Handler):
                         break
                     if i == 0:
                         if len(unpacked_list[i].sequence) >= 20:
-                            unpacked_list[i].primer_forward = unpacked_list[i].sequence[:20]
+                            unpacked_list[i].primer_forward = backbone_sequence[-40:] + unpacked_list[i].sequence[:20]
                         else:
-                            unpacked_list[i].primer_forward = unpacked_list[i].sequence
+                            unpacked_list[i].primer_forward = backbone_sequence[-40:] + unpacked_list[i].sequence
                         if len(unpacked_list[i].sequence) >= 20 and len(unpacked_list[i+1].sequence) >= 40:
                             unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-20:] + unpacked_list[i+1].sequence[:40])
                         elif len(unpacked_list[i].sequence) >= 20 and len(unpacked_list[i+1].sequence) < 40:
@@ -317,9 +340,9 @@ class MainHandler(Handler):
                             unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence)
                     elif i <= len(unpacked_list)-1:
                         if len(unpacked_list[i].sequence) >= 20:
-                            unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-20:])
+                            unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-20:] + backbone_sequence[:40])
                         else:
-                            unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence)
+                            unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + backbone_sequence[:40])
                         if len(unpacked_list[i].sequence) >= 20 and len(unpacked_list[i-1].sequence) >= 40:
                             unpacked_list[i].primer_forward = unpacked_list[i-1].sequence[-40:] + unpacked_list[i].sequence[:20]
                         elif len(unpacked_list[i].sequence) >= 20 and len(unpacked_list[i-1].sequence) < 40:
@@ -351,14 +374,14 @@ class MainHandler(Handler):
                         break
                     if i == 0:
                         if len(unpacked_list[i+1].sequence) >= 40:
-                            unpacked_list[i].sequence = unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:40]
+                            unpacked_list[i].sequence = backbone_sequence[-40:] + unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:40]
                         else:
-                            unpacked_list[i].sequence = unpacked_list[i].sequence + unpacked_list[i+1].sequence
+                            unpacked_list[i].sequence = backbone_sequence[-40:] + unpacked_list[i].sequence + unpacked_list[i+1].sequence
                     elif i <= len(unpacked_list)-1:
                         if len(unpacked_list[i-1].sequence) >= 40:
-                            unpacked_list[i].sequence = unpacked_list[i-1].sequence[-80:-40] + unpacked_list[i].sequence
+                            unpacked_list[i].sequence = unpacked_list[i-1].sequence[-80:-40] + unpacked_list[i].sequence + backbone_sequence[:40]
                         else:
-                            unpacked_list[i].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence
+                            unpacked_list[i].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence + backbone_sequence[:40]
                     else:
                         if len(unpacked_list[i-1].sequence) >= 40 and len(unpacked_list[i+1].sequence) >= 40:
                             unpacked_list[i].sequence = unpacked_list[i-1].sequence[-80:-40] + unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:40]
@@ -384,9 +407,9 @@ class MainHandler(Handler):
                         break
                     if i == 0:
                         if len(unpacked_list[i].sequence) >= 25:
-                            unpacked_list[i].primer_forward = unpacked_list[i].sequence[:25]
+                            unpacked_list[i].primer_forward = backbone_sequence[-25:] + unpacked_list[i].sequence[:25]
                         else:
-                            unpacked_list[i].primer_forward = unpacked_list[i].sequence
+                            unpacked_list[i].primer_forward = backbone_sequence[-25:] + unpacked_list[i].sequence
                         if len(unpacked_list[i].sequence) >= 25 and len(unpacked_list[i+1].sequence) >= 25:
                             unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-25:] + unpacked_list[i+1].sequence[:25])
                         elif len(unpacked_list[i].sequence) >= 25 and len(unpacked_list[i+1].sequence) < 25:
@@ -397,9 +420,9 @@ class MainHandler(Handler):
                             unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence)
                     elif i <= len(unpacked_list)-1:
                         if len(unpacked_list[i].sequence) >= 25:
-                            unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-25:])
+                            unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-25:] + backbone_sequence[:25])
                         else:
-                            unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence)
+                            unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + backbone_sequence[:25])
                         if len(unpacked_list[i].sequence) >= 25 and len(unpacked_list[i-1].sequence) >= 25:
                             unpacked_list[i].primer_forward = unpacked_list[i-1].sequence[-25:] + unpacked_list[i].sequence[:25]
                         elif len(unpacked_list[i].sequence) >= 25 and len(unpacked_list[i-1].sequence) < 25:
@@ -431,14 +454,14 @@ class MainHandler(Handler):
                         break
                     if i == 0:
                         if len(unpacked_list[i+1].sequence) >= 25:
-                            unpacked_list[i].sequence = unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:25]
+                            unpacked_list[i].sequence = backbone_sequence[-25:] + unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:25]
                         else:
-                            unpacked_list[i].sequence = unpacked_list[i].sequence + unpacked_list[i+1].sequence
+                            unpacked_list[i].sequence = backbone_sequence[-25:] + unpacked_list[i].sequence + unpacked_list[i+1].sequence
                     elif i <= len(unpacked_list)-1:
                         if len(unpacked_list[i-1].sequence) >= 25:
-                            unpacked_list[i].sequence = unpacked_list[i-1].sequence[-50:-25] + unpacked_list[i].sequence
+                            unpacked_list[i].sequence = unpacked_list[i-1].sequence[-50:-25] + unpacked_list[i].sequence + backbone_sequence[:25]
                         else:
-                            unpacked_list[i].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence
+                            unpacked_list[i].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence + backbone_sequence[:25]
                     else:
                         if len(unpacked_list[i-1].sequence) >= 25 and len(unpacked_list[i+1].sequence) >= 25:
                             unpacked_list[i].sequence = unpacked_list[i-1].sequence[-50:-25] + unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:25]
@@ -459,9 +482,14 @@ class MainHandler(Handler):
                 for part in unpacked_list:
                     part.assembly_method = "LCR"
                 for i in range(len(unpacked_list)):
-                    if len(unpacked_list)<2 or i==(len(unpacked_list)-1):
+                    if len(unpacked_list)<2:
                         break
-                    unpacked_list[i].bridge_with_next_part = create_LCR_bridge(unpacked_list[i].sequence,unpacked_list[i+1].sequence)
+                    if i == (len(unpacked_list)-1):
+                        unpacked_list[i].bridge_with_next_part = create_LCR_bridge(unpacked_list[i].sequence,backbone_sequence[:200])
+                    if i == 0:
+                        unpacked_list[i].bridge_with_previous_part = create_LCR_bridge(backbone_sequence[-200:],unpacked_list[i].sequence)
+                    if i < (len(unpacked_list)-1):
+                        unpacked_list[i].bridge_with_next_part = create_LCR_bridge(unpacked_list[i].sequence,unpacked_list[i+1].sequence)
             parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
             self.redirect("/assembly")
         golden_gate_error=""
@@ -563,7 +591,7 @@ class InputPartHandler(Handler):
                     multipart = MultiPart(dynname,parts)
                     parts_list,session_id = self.get_parts_list()
                     parts_list.append(multipart)
-                    app.registry[session_id]['parts_list'] = parts_list
+                    application.registry[session_id]['parts_list'] = parts_list
                     self.redirect("/")
                 self.render("input_part.html",css=css,js=js,nameerror="",dynnameerror=dynnameerror,fileerror=fileerror,dynname=dynname,dynamic="yes")
 
@@ -593,7 +621,7 @@ class InputPartHandler(Handler):
                         part.description = description
                     parts_list,session_id = self.get_parts_list()
                     parts_list.append(part)
-                    app.registry[session_id]['parts_list'] = parts_list
+                    application.registry[session_id]['parts_list'] = parts_list
                     self.redirect("/")
                 self.render("input_part.html",css=css,js=js,nameerror=nameerror,sequenceerror=sequenceerror,name=name,sequence=sequence,type=type,description=description,dynname=dynname)
 
@@ -640,8 +668,10 @@ class AssemblyHandler(Handler):
                         csvdictwriter2.writerow({'Name':(part.name+",forward"),'':'','Sequence':part.primer_forward})
                         csvdictwriter2.writerow({'Name':(part.name+",reverse"),'':'','Sequence':part.primer_reverse})
                 elif unpacked_list[0].assembly_method == "LCR":
+                    csvdictwriter2.writerow({'Bridge':("plasmid backbone-"+parts_list[0].name),'':'','Sequence':parts_list[0].bridge_with_previous_part})
                     for i,part in enumerate(unpacked_list[:-1]):
                         csvdictwriter2.writerow({'Bridge':(part.name+"-"+unpacked_list[i+1].name),'':'','Sequence':part.bridge_with_next_part})
+                    csvdictwriter2.writerow({'Bridge':(parts_list[-1].name+"-plasmid backbone"),'':'','Sequence':parts_list[-1].bridge_with_next_part})
                 csvwriter.writerow([])
         with open("constructs/plasmid_assembly_%s.csv"%session_id,'r') as f:
             data_uri = "data:text/csv;base64,"
@@ -671,21 +701,52 @@ class ConstructDownloadHandler(Handler):
         os.remove("constructs/plasmid_construct_%s.xml"%session_id)
         self.render("construct_download.html",css=css,data_uri=data_uri,filename=filename)
 
-#Initialize the web framework. URL paths are attached to their respective handlers
-app = webapp2.WSGIApplication([
-    ('/', MainHandler),('/break',breakHandler),('/inputpart',InputPartHandler),('/assembly',AssemblyHandler),('/construct_download',ConstructDownloadHandler)#,('/ExamplePath',exampleHandler)
-], debug=True)
-app.set_globals(app=app)
+class ConfigHandler(Handler):
+    def get(self):
+        for record in SeqIO.parse("templates/pET-26b.fa","fasta"):
+            default_backbone = record
+        default_config = {"backbone":default_backbone}
+        parts_list,session_id = self.get_parts_list()
+        app = webapp2.get_app()
+        if "assembly_config" not in app.registry.get(session_id).keys() or app.registry[session_id]["assembly_config"] is None:
+            app.registry[session_id]["assembly_config"] = default_config
+        assembly_config = app.registry.get(session_id)["assembly_config"]
+        self.render("config.html",css=css,assembly_config=assembly_config)
+    def post(self):
+        parts_list,session_id = self.get_parts_list()
+        app = webapp2.get_app()
+        if self.request.POST.get('cancel')=="cancel":
+            self.redirect("/")
+        if self.request.POST.get('save')=="save":
+            for key in application.registry.get(session_id)["assembly_config"].keys():
+                if key == "backbone":
+                    if self.request.POST.get("backbone")!= b'' and self.request.POST.get("backbone") is not None:
+                        file = self.request.POST.get("backbone").file.read().decode("UTF-8")#.split("\r\n")
+                        import io
+                        textfile = io.StringIO(file)
+                        for record in SeqIO.parse(textfile,"fasta"):
+                            application.registry[session_id]["assembly_config"][key] = record
+                        textfile.close()
+                    else:
+                        for record in SeqIO.parse("templates/pET-26b.fa","fasta"):
+                            application.registry[session_id]["assembly_config"][key] = record
+                else:
+                    application.registry[session_id]["assembly_config"][key] = self.request.POST.get('key')
+            self.redirect("/")
 
-#Serve the web app on a server (cPanel uses localhost IP "0.0.0.0")
+#Initialize the web framework. URL paths are attached to their respective handlers
+#WSGI app must have the variable name "application" I think
+application = webapp2.WSGIApplication([
+    ('/', MainHandler),('/break',breakHandler),('/inputpart',InputPartHandler),('/assembly',AssemblyHandler),('/construct_download',ConstructDownloadHandler),('/config',ConfigHandler)#,('/ExamplePath',exampleHandler)
+], debug=True)
+application.set_globals(app=application)
+
+#Serve the web app on a specific IP and port, useful for local deployment
 #Additional helpful arguments available in httpserver documentation
 def main():
     from paste import httpserver
-    httpserver.serve(app, host="0.0.0.0")
+    httpserver.serve(app, host="0.0.0.0",port="80")
+    #pass
 
 if __name__ == "__main__":
     main()
-
-#TODO:
-#   -write registry to a file as a basic database?
-#   -

@@ -80,13 +80,13 @@ function dragstart(e) {
         <div class="container">
             <div id="log-top" class="ui secondary menu">
                 <a id="wrapper-font" class="item">
-                <!-- <img src="/home/ibiocadsite/public_html/cgi-bin/iBioCAD/images/ibiocad_logo.png" alt="iBioCAD" height="120" width="120"> -->
+                <!--<img src="/home/ibiocadsite/public_html/cgi-bin/iBioCAD/images/ibiocad_logo.png" alt="iBioCAD" height="120" width="120"> -->
                 <img class="ui image" src="http://web.engr.illinois.edu/~tohidif2/iBioCAD/img/ibiocad_logo.png" alt="iBioCAD height=" 120" width="120" ">
                 </a>
                 <a id="wrapper-font" class="active item" style="padding-top:7px;padding-bottom:7px;padding-left:14px;padding-right:14px;margin-left:3.5px;margin-right:3.5px;">
                     Design
                 </a>
-                <a id="wrapper-font" class="active item" style="padding-top:7px;padding-bottom:7px;padding-left:14px;padding-right:14px;margin-left:3.5px;margin-right:3.5px;">
+                <a id="wrapper-font" href="https://github.com/scottweis1/iBioCAD" class="active item" style="padding-top:7px;padding-bottom:7px;padding-left:14px;padding-right:14px;margin-left:3.5px;margin-right:3.5px;">
                     Documentation
                 </a>
                 <form method="post" style="display: flex">
@@ -137,7 +137,11 @@ function dragstart(e) {
                 {%else%}
                 <form method="post" class="ui form raised segment" enctype="multipart/form-data" style="padding-left:5px;padding-right:5px;margin-top:0px;">
                 {%endif%}
-                    <p style="font-family:arial;color:black;font-size:14px;margin-bottom:10px;">Assembly Method</p>
+                    <p style="font-family:arial;color:black;font-size:14px;margin-bottom:10px;">Assembly Method
+                        <a href="/config">
+                        <img src="http://ibiocadsite.web.engr.illinois.edu/cgi-bin/iBioCAD/images/settings_icon.svg" class="ui image right floated" style="top: -10px"></img>
+                        </a>
+                    </p>
                     <select id="Assembly_Method" class="compact" name="assembly_method" style="margin-bottom:15px">
                         <option value="Yeast_Assembly">Yeast Assembly</option>
                         <option value="Gibson_Assembly">Gibson Assembly</option>

@@ -86,12 +86,20 @@
             </tr>
             </thead>
             <tbody>
+                <tr>
+                    <td class="top aligned">{{"plasmid backbone-" ~ parts_list[0].name}}</td>
+                    <td class="top aligned">{{parts_list[0].bridge_with_next_part}}</td>
+                </tr>
                 {%for part in parts_list[:-1]%}
                 <tr>
                     <td class="top aligned">{{part.name ~ "-" ~ parts_list[loop.index0+1].name}}</td>
                     <td class="top aligned">{{part.bridge_with_next_part}}</td>
                 </tr>
                 {%endfor%}
+                <tr>
+                    <td class="top aligned">{{parts_list[-1].name ~ "-plasmid backbone"}}</td>
+                    <td class="top aligned">{{parts_list[-1].bridge_with_next_part}}</td>
+                </tr>
             </tbody>
         </table>
         {%endif%}
@@ -123,7 +131,11 @@
                 <tr>
                     <td class="top aligned">{{part.name}}</td>
                     <td class="top aligned">{{part.type}}</td>
+                    {%if part.sequence|length() > 500 %}
+                    <td class="top aligned">{{part.sequence[0:250] ~"..."~ part.sequence[-250:]}}</td>
+                    {%else%}
                     <td class="top aligned">{{part.sequence}}</td>
+                    {%endif%}
                     <td class="top aligned">{{part.description}}</td>
                 </tr>
                 {%endfor%}

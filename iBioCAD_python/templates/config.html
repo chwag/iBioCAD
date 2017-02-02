@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<style>
+    {{css}}
+</style>
+<head>
+    <meta charset="UTF-8">
+    <title>Config</title>
+</head>
+<body>
+    <div class="ui raised segment container" style="top:10%;width:50%;word-wrap:break-word">
+        <form method="POST" class="ui form" enctype="multipart/form-data">
+            <div id="general_category" class="ui raised segment container">
+                <a class="ui green button" href="#general_category" style="display: inline-flex">General</a>
+                <a class="ui blue button" href="#yeast_category" style="display: inline-flex">Yeast Assembly</a>
+                <a class="ui blue button" href="#gibson_category" style="display: inline-flex">Gibson Assembly</a>
+                <a class="ui blue button" href="#LCR_category" style="display: inline-flex">LCR</a>
+                <a class="ui blue button" href="#enzyme_category" style="display: inline-flex">Type II Restriction Enzyme</a>
+                <h1>General</h1>
+                <div class="ui field raised segment container">
+                    <label>Plasmid Backbone Sequence</label><br>
+                    {{assembly_config["backbone"].id}} <br>
+                    {{assembly_config["backbone"].seq|length}} bp <br>
+                    {%if assembly_config["backbone"].seq|length > 50 %}
+                    {{assembly_config["backbone"].seq[0:25] ~"..."~ assembly_config["backbone"].seq[-25:]}}
+                    {%else%}
+                    {{assembly_config["backbone"].seq}}
+                    {%endif%}<br><br>
+                    <input type="file" name="backbone">
+                </div>
+                <button type="submit" class="ui blue button" name="save" value="save">Save</button>
+                <button type="submit" class="ui red button" name="cancel" value="cancel">Cancel</button>
+            </div>
+            <div id="yeast_category" class="ui raised segment container">
+                <a class="ui blue button" href="#general_category" style="display: inline-flex">General</a>
+                <a class="ui green button" href="#yeast_category" style="display: inline-flex">Yeast Assembly</a>
+                <a class="ui blue button" href="#gibson_category" style="display: inline-flex">Gibson Assembly</a>
+                <a class="ui blue button" href="#LCR_category" style="display: inline-flex">LCR</a>
+                <a class="ui blue button" href="#enzyme_category" style="display: inline-flex">Type II Restriction Enzyme</a>
+                <h1>Yeast Assembly</h1>
+                checks and options<br><br>
+                <button type="submit" class="ui blue button" name="save" value="save">Save</button>
+                <button type="submit" class="ui red button" name="cancel" value="cancel">Cancel</button>
+            </div>
+            <div id="gibson_category" class="ui raised segment container">
+                <a class="ui blue button" href="#general_category" style="display: inline-flex">General</a>
+                <a class="ui blue button" href="#yeast_category" style="display: inline-flex">Yeast Assembly</a>
+                <a class="ui green button" href="#gibson_category" style="display: inline-flex">Gibson Assembly</a>
+                <a class="ui blue button" href="#LCR_category" style="display: inline-flex">LCR</a>
+                <a class="ui blue button" href="#enzyme_category" style="display: inline-flex">Type II Restriction Enzyme</a>
+                <h1>Gibson Assembly</h1>
+                checks and options<br><br>
+                <button type="submit" class="ui blue button" name="save" value="save">Save</button>
+                <button type="submit" class="ui red button" name="cancel" value="cancel">Cancel</button>
+            </div>
+            <div id="LCR_category" class="ui raised segment container">
+                <a class="ui blue button" href="#general_category" style="display: inline-flex">General</a>
+                <a class="ui blue button" href="#yeast_category" style="display: inline-flex">Yeast Assembly</a>
+                <a class="ui blue button" href="#gibson_category" style="display: inline-flex">Gibson Assembly</a>
+                <a class="ui green button" href="#LCR_category" style="display: inline-flex">LCR</a>
+                <a class="ui blue button" href="#enzyme_category" style="display: inline-flex">Type II Restriction Enzyme</a>
+                <h1>LCR Assembly</h1>
+                checks and options<br><br>
+                <button type="submit" class="ui blue button" name="save" value="save">Save</button>
+                <button type="submit" class="ui red button" name="cancel" value="cancel">Cancel</button>
+            </div>
+            <div id="enzyme_category" class="ui raised segment container">
+                <a class="ui blue button" href="#general_category" style="display: inline-flex">General</a>
+                <a class="ui blue button" href="#yeast_category" style="display: inline-flex">Yeast Assembly</a>
+                <a class="ui blue button" href="#gibson_category" style="display: inline-flex">Gibson Assembly</a>
+                <a class="ui blue button" href="#LCR_category" style="display: inline-flex">LCR</a>
+                <a class="ui green button" href="#enzyme_category" style="display: inline-flex">Type II Restriction Enzyme</a>
+                <h1>Type II Restriction Enzyme Assembly</h1>
+                checks and options<br><br>
+                <button type="submit" class="ui blue button" name="save" value="save">Save</button>
+                <button type="submit" class="ui red button" name="cancel" value="cancel">Cancel</button>
+            </div>
+        </form>
+        </div>
+</body>
+</html>
