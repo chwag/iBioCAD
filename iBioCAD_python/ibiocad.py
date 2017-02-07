@@ -30,31 +30,32 @@ import os
 import jinja2       #optional template rendering
 from Bio.SeqUtils import MeltingTemp as mt
 from Bio import SeqIO
+is_local = False     #set file path to the local folder if True or server path if False
 
-#path on local
 #import stylesheets and javascript for web pages
-with open('templates/main_page.css','r') as my_main_page_css_raw:
-    my_main_page_css = my_main_page_css_raw.read()
-with open('templates/semantic.min.css','r') as semantic_css_raw:
-    semantic_css = semantic_css_raw.read()
-with open('templates/semantic.min.js','r') as semantic_js_raw:
-    semantic_js = semantic_js_raw.read()
-css = my_main_page_css + semantic_css
-js = semantic_js
-
-#path on the server
-#with open('/var/www/ibiocad/iBioCAD/templates/main_page.css','r') as my_main_page_css_raw:
-    #my_main_page_css = my_main_page_css_raw.read()
-#with open('/var/www/ibiocad/iBioCAD/templates/semantic.min.css','r') as semantic_css_raw:
-    #semantic_css = semantic_css_raw.read()
-#with open('/var/www/ibiocad/iBioCAD/templates/semantic.min.js','r') as semantic_js_raw:
-    #semantic_js = semantic_js_raw.read()
-#css = my_main_page_css + semantic_css
-#js = semantic_js
+if is_local:
+    #path on local
+    with open('templates/main_page.css','r') as my_main_page_css_raw:
+        my_main_page_css = my_main_page_css_raw.read()
+    with open('templates/semantic.min.css','r') as semantic_css_raw:
+        semantic_css = semantic_css_raw.read()
+    with open('templates/semantic.min.js','r') as semantic_js_raw:
+        semantic_js = semantic_js_raw.read()
+    css = my_main_page_css + semantic_css
+    js = semantic_js
+else:
+    #path on the server
+    with open('/var/www/ibiocad/iBioCAD/templates/main_page.css','r') as my_main_page_css_raw:
+        my_main_page_css = my_main_page_css_raw.read()
+    with open('/var/www/ibiocad/iBioCAD/templates/semantic.min.css','r') as semantic_css_raw:
+        semantic_css = semantic_css_raw.read()
+    with open('/var/www/ibiocad/iBioCAD/templates/semantic.min.js','r') as semantic_js_raw:
+        semantic_js = semantic_js_raw.read()
+    css = my_main_page_css + semantic_css
+    js = semantic_js
 
 tkinter_use = False     #set to true to use a GUI window within a web handler
 server_debug = False     #set to false to disable the ability to restart a server process
-
 '''
 Initialize jinja2 rendering
    -html documents that will be rendered must be put in a file folder named "templates"
@@ -123,7 +124,7 @@ class Handler(webapp2.RequestHandler):
         else:
             updated_parts_list = updated_parts_list
         session_id = self.get_parts_list()[1]
-        app.registry[session_id]['parts_list'] = updated_parts_list
+        application.registry[session_id]['parts_list'] = updated_parts_list
         return updated_parts_list,session_id
 
 '''
@@ -304,8 +305,12 @@ class MainHandler(Handler):
             parts_list,session_id = self.update_part_list()
             generateSBOLdoc(parts_list,session_id)
             self.redirect("/construct_download")
-        for record in SeqIO.parse("templates/pET-26b.fa","fasta"):
-            default_backbone = record
+        if is_local:
+            for record in SeqIO.parse("templates/pET-26b.fa","fasta"):
+                default_backbone = record
+        else:
+            for record in SeqIO.parse("/var/www/ibiocad/iBioCAD/templates/pET-26b.fa","fasta"):
+                default_backbone = record
         default_config = {"backbone":default_backbone}
         parts_list,session_id = self.get_parts_list()
         app = webapp2.get_app()
@@ -338,7 +343,7 @@ class MainHandler(Handler):
                             unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence[:40])
                         else:
                             unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence)
-                    elif i <= len(unpacked_list)-1:
+                    elif i == len(unpacked_list)-1:
                         if len(unpacked_list[i].sequence) >= 20:
                             unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-20:] + backbone_sequence[:40])
                         else:
@@ -377,7 +382,7 @@ class MainHandler(Handler):
                             unpacked_list[i].sequence = backbone_sequence[-40:] + unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:40]
                         else:
                             unpacked_list[i].sequence = backbone_sequence[-40:] + unpacked_list[i].sequence + unpacked_list[i+1].sequence
-                    elif i <= len(unpacked_list)-1:
+                    elif i == len(unpacked_list)-1:
                         if len(unpacked_list[i-1].sequence) >= 40:
                             unpacked_list[i].sequence = unpacked_list[i-1].sequence[-80:-40] + unpacked_list[i].sequence + backbone_sequence[:40]
                         else:
@@ -418,7 +423,7 @@ class MainHandler(Handler):
                             unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence[:25])
                         else:
                             unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence)
-                    elif i <= len(unpacked_list)-1:
+                    elif i == len(unpacked_list)-1:
                         if len(unpacked_list[i].sequence) >= 25:
                             unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-25:] + backbone_sequence[:25])
                         else:
@@ -457,7 +462,7 @@ class MainHandler(Handler):
                             unpacked_list[i].sequence = backbone_sequence[-25:] + unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:25]
                         else:
                             unpacked_list[i].sequence = backbone_sequence[-25:] + unpacked_list[i].sequence + unpacked_list[i+1].sequence
-                    elif i <= len(unpacked_list)-1:
+                    elif i == len(unpacked_list)-1:
                         if len(unpacked_list[i-1].sequence) >= 25:
                             unpacked_list[i].sequence = unpacked_list[i-1].sequence[-50:-25] + unpacked_list[i].sequence + backbone_sequence[:25]
                         else:
@@ -631,7 +636,11 @@ class AssemblyHandler(Handler):
         app = webapp2.get_app()
         builds_list = app.registry.get(session_id)['builds_list']
         import csv
-        with open("constructs/plasmid_assembly_%s.csv"%session_id,'w') as csvfile:
+        if is_local:
+            assembly_file = "constructs/plasmid_assembly_%s.csv"
+        else:
+            assembly_file = "/var/www/ibiocad/iBioCAD/constructs/plasmid_assembly_%s.csv"
+        with open(assembly_file%session_id,'w') as csvfile:
             fieldnames = ['Name','Type','Sequence','Description']
             csvdictwriter = csv.DictWriter(csvfile,fieldnames=fieldnames)
             csvwriter = csv.writer(csvfile)
@@ -673,7 +682,7 @@ class AssemblyHandler(Handler):
                         csvdictwriter2.writerow({'Bridge':(part.name+"-"+unpacked_list[i+1].name),'':'','Sequence':part.bridge_with_next_part})
                     csvdictwriter2.writerow({'Bridge':(parts_list[-1].name+"-plasmid backbone"),'':'','Sequence':parts_list[-1].bridge_with_next_part})
                 csvwriter.writerow([])
-        with open("constructs/plasmid_assembly_%s.csv"%session_id,'r') as f:
+        with open(assembly_file%session_id,'r') as f:
             data_uri = "data:text/csv;base64,"
             import base64
             if sys.version_info[0] == 3:
@@ -682,13 +691,17 @@ class AssemblyHandler(Handler):
                 data_uri += base64.b64encode(f.read())
         import datetime
         filename = "plasmid_assembly_%s.csv"%datetime.date.today()
-        os.remove("constructs/plasmid_assembly_%s.csv"%session_id)
+        os.remove(assembly_file%session_id)
         self.render("assembly_page.html",builds_list=builds_list,data_uri=data_uri,filename=filename,css=css)
 
 class ConstructDownloadHandler(Handler):
     def get(self):
         parts_list,session_id = self.get_parts_list()
-        with open("constructs/plasmid_construct_%s.xml"%session_id,'r') as construct:
+        if is_local:
+            construct_file = "constructs/plasmid_construct_%s.xml"
+        else:
+            construct_file = "/var/www/ibiocad/iBioCAD/constructs/plasmid_construct_%s.xml"
+        with open(construct_file%session_id,'r') as construct:
             file = construct.read()
             data_uri = "data:text/xml;base64,"
             import base64
@@ -698,13 +711,19 @@ class ConstructDownloadHandler(Handler):
                 data_uri += str(base64.b64encode(bytes(file,'utf-8')),'utf-8')
         import datetime
         filename = "plasmid_construct_%s.xml"%datetime.date.today()
-        os.remove("constructs/plasmid_construct_%s.xml"%session_id)
+        os.remove(construct_file%session_id)
         self.render("construct_download.html",css=css,data_uri=data_uri,filename=filename)
 
 class ConfigHandler(Handler):
     def get(self):
-        for record in SeqIO.parse("templates/pET-26b.fa","fasta"):
-            default_backbone = record
+        if is_local:
+            #path on local
+            for record in SeqIO.parse("templates/pET-26b.fa","fasta"):
+                default_backbone = record
+        else:
+            #path on server
+            for record in SeqIO.parse("/var/www/ibiocad/iBioCAD/templates/pET-26b.fa","fasta"):
+                default_backbone = record
         default_config = {"backbone":default_backbone}
         parts_list,session_id = self.get_parts_list()
         app = webapp2.get_app()
@@ -728,8 +747,14 @@ class ConfigHandler(Handler):
                             application.registry[session_id]["assembly_config"][key] = record
                         textfile.close()
                     else:
-                        for record in SeqIO.parse("templates/pET-26b.fa","fasta"):
-                            application.registry[session_id]["assembly_config"][key] = record
+                        if is_local:
+                            #path on local
+                            for record in SeqIO.parse("templates/pET-26b.fa","fasta"):
+                                application.registry[session_id]["assembly_config"][key] = record
+                        else:
+                            #path on server
+                            for record in SeqIO.parse("/var/www/ibiocad/iBioCAD/templates/pET-26b.fa","fasta"):
+                                application.registry[session_id]["assembly_config"][key] = record
                 else:
                     application.registry[session_id]["assembly_config"][key] = self.request.POST.get('key')
             self.redirect("/")
@@ -745,8 +770,10 @@ application.set_globals(app=application)
 #Additional helpful arguments available in httpserver documentation
 def main():
     from paste import httpserver
-    httpserver.serve(app, host="0.0.0.0",port="80")
-    #pass
+    if is_local:
+        httpserver.serve(app, host="0.0.0.0",port="80")
+    else:
+        pass
 
 if __name__ == "__main__":
     main()
