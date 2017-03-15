@@ -205,6 +205,11 @@ function dragstart(e) {
     alert("A sequence contains a BsaI recognition site!");
     window.open('', '_self', ''); window.close();
 </script>
+{%elif golden_gate_error == "no_efficient_overhang_combinations"%}
+<script>
+    alert("There are no efficient combinations of BsaI overhangs!");
+    window.open('', '_self', ''); window.close();
+</script>
 {%endif%}
 </body>
 </html>

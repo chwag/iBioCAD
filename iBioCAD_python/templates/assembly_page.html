@@ -17,6 +17,7 @@
         {%endif%}{%endfor%}
     </a>
     {%endfor%}
+{%if parts_list|length >= 2%}
 {%for parts_list in builds_list %}
     <div class="ui raised segment container" style="top:10%">
         {%if parts_list[0].assembly_method == "Yeast_Assembly" or parts_list[0].assembly_method == "Gibson_Assembly" or parts_list[0].assembly_method == "Type_II_Restriction_Enzyme"%}
@@ -127,6 +128,16 @@
             </tr>
             </thead>
             <tbody>
+                <tr>
+                    <td class="top aligned">"Backbone"</td>
+                    <td class="top aligned">""</td>
+                    {%if new_backbone_sequence|length() > 500 %}
+                    <td class="top aligned">{{new_backbone_sequence[0:250] ~"..."~ new_backbone_sequence[-250:]}}</td>
+                    {%else%}
+                    <td class="top aligned">{{new_backbone_sequence}}</td>
+                    {%endif%}
+                    <td class="top aligned">""}}</td>
+                </tr>
                 {%for part in parts_list%}
                 <tr>
                     <td class="top aligned">{{part.name}}</td>
@@ -147,5 +158,6 @@
     </div>
     <br>
 {%endfor%}
+{%endif%}
 </body>
 </html>

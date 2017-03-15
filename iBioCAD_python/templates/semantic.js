@@ -7929,9 +7929,8 @@ $.fn.dropdown.settings.templates = {
  *
  */
 
-;(function ($, window, document, undefined) {
-
-"use strict";
+(function ($, window, document, undefined) {
+   "use strict";
 
 window = (typeof window != 'undefined' && window.Math == Math)
   ? window
@@ -8626,9 +8625,8 @@ $.fn.embed.settings = {
  *
  */
 
-;(function ($, window, document, undefined) {
-
-"use strict";
+(function ($, window, document, undefined) {
+   "use strict";
 
 window = (typeof window != 'undefined' && window.Math == Math)
   ? window
@@ -9044,7 +9042,7 @@ $.fn.modal = function(parameters) {
           }
           else {
             module.debug('Dimmer is not visible cannot hide');
-            return;
+
           }
         },
 
@@ -9534,9 +9532,8 @@ $.fn.modal.settings = {
  *
  */
 
-;(function ($, window, document, undefined) {
-
-"use strict";
+(function ($, window, document, undefined) {
+   "use strict";
 
 window = (typeof window != 'undefined' && window.Math == Math)
   ? window
@@ -9736,7 +9733,7 @@ $.fn.nag = function(parameters) {
             }
             else {
               module.error(error.noCookieStorage);
-              return;
+
             }
           },
           get: function(key, value) {
@@ -10042,9 +10039,8 @@ $.extend( $.easing, {
  *
  */
 
-;(function ($, window, document, undefined) {
-
-"use strict";
+(function ($, window, document, undefined) {
+   "use strict";
 
 window = (typeof window != 'undefined' && window.Math == Math)
   ? window
@@ -11516,9 +11512,8 @@ $.fn.popup.settings = {
  *
  */
 
-;(function ($, window, document, undefined) {
-
-"use strict";
+(function ($, window, document, undefined) {
+   "use strict";
 
 window = (typeof window != 'undefined' && window.Math == Math)
   ? window
@@ -12427,9 +12422,8 @@ $.fn.progress.settings = {
  *
  */
 
-;(function ($, window, document, undefined) {
-
-"use strict";
+(function ($, window, document, undefined) {
+   "use strict";
 
 window = (typeof window != 'undefined' && window.Math == Math)
   ? window
@@ -12936,9 +12930,8 @@ $.fn.rating.settings = {
  *
  */
 
-;(function ($, window, document, undefined) {
-
-"use strict";
+(function ($, window, document, undefined) {
+   "use strict";
 
 window = (typeof window != 'undefined' && window.Math == Math)
   ? window
@@ -14335,9 +14328,8 @@ $.fn.search.settings = {
  *
  */
 
-;(function ($, window, document, undefined) {
-
-"use strict";
+(function ($, window, document, undefined) {
+   "use strict";
 
 window = (typeof window != 'undefined' && window.Math == Math)
   ? window
@@ -15257,9 +15249,8 @@ $.fn.shape.settings = {
  *
  */
 
-;(function ($, window, document, undefined) {
-
-"use strict";
+(function ($, window, document, undefined) {
+   "use strict";
 
 window = (typeof window != 'undefined' && window.Math == Math)
   ? window
@@ -16294,9 +16285,8 @@ $.fn.sidebar.settings = {
  *
  */
 
-;(function ($, window, document, undefined) {
-
-"use strict";
+(function ($, window, document, undefined) {
+   "use strict";
 
 window = (typeof window != 'undefined' && window.Math == Math)
   ? window
@@ -16433,7 +16423,7 @@ $.fn.sticky = function(parameters) {
           }
           if($context.length === 0) {
             module.error(error.invalidContext, settings.context, $module);
-            return;
+
           }
         },
 
@@ -16444,7 +16434,7 @@ $.fn.sticky = function(parameters) {
           if(module.cache.element.height > module.cache.context.height) {
             module.reset();
             module.error(error.elementSize, $module);
-            return;
+
           }
         },
 
@@ -17231,9 +17221,8 @@ $.fn.sticky.settings = {
  *
  */
 
-;(function ($, window, document, undefined) {
-
-"use strict";
+(function ($, window, document, undefined) {
+   "use strict";
 
 window = (typeof window != 'undefined' && window.Math == Math)
   ? window
@@ -18160,9 +18149,8 @@ $.fn.tab.settings = {
  *
  */
 
-;(function ($, window, document, undefined) {
-
-"use strict";
+(function ($, window, document, undefined) {
+   "use strict";
 
 window = (typeof window != 'undefined' && window.Math == Math)
   ? window
@@ -19251,9 +19239,8 @@ $.fn.transition.settings = {
  *
  */
 
-;(function ($, window, document, undefined) {
-
-"use strict";
+(function ($, window, document, undefined) {
+   "use strict";
 
 var
   window = (typeof window != 'undefined' && window.Math == Math)
@@ -20419,9 +20406,8 @@ $.api.settings = {
  *
  */
 
-;(function ($, window, document, undefined) {
-
-"use strict";
+(function ($, window, document, undefined) {
+   "use strict";
 
 window = (typeof window != 'undefined' && window.Math == Math)
   ? window
@@ -21128,9 +21114,8 @@ $.fn.state.settings = {
  *
  */
 
-;(function ($, window, document, undefined) {
-
-"use strict";
+(function ($, window, document, undefined) {
+   "use strict";
 
 window = (typeof window != 'undefined' && window.Math == Math)
   ? window

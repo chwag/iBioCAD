@@ -31,6 +31,7 @@ import jinja2       #optional template rendering
 from Bio.SeqUtils import MeltingTemp as mt
 from Bio import SeqIO
 is_local = False     #set file path to the local folder if True or server path if False
+import itertools
 
 #import stylesheets and javascript for web pages
 if is_local:
@@ -269,6 +270,38 @@ def builds(parts_list):
         builds_list.append(build)
     return builds_list
 
+#optimizes the overhangs used in Golden Gate assembly
+def golden_gate_optimization(parts_list,backbone_sequence):
+    seq_pairs = {0:"ccct",1:"gctc",2:"cggt",3:"gtgc",4:"agcg",5:"ctgt",6:"tgct",7:"atgg",8:"gact",9:"ggac",10:"tccg",11:"ccag",12:"cagc",13:"gttg",14:"cgaa",15:"ccat"}
+    seq_matches = []
+    for x in range(len(parts_list)+1):
+        seq_matches.append([])
+        if x == 0:
+            for y in range(16):
+                if seq_pairs[y] in reverse_complement(backbone_sequence[-35:]):
+                    seq_matches[x].append(seq_pairs[y])
+                elif seq_pairs[y] in parts_list[x].sequence[:35]:
+                    seq_matches[x].append(seq_pairs[y])
+        elif x == len(parts_list):
+            for y in range(16):
+                if seq_pairs[y] in reverse_complement(parts_list[x-1].sequence[-35:]):
+                    seq_matches[x].append(seq_pairs[y])
+                elif seq_pairs[y] in backbone_sequence[:35]:
+                    seq_matches[x].append(seq_pairs[y])
+        else:
+            for y in range(16):
+                if seq_pairs[y] in reverse_complement(parts_list[x].sequence[-35:]):
+                    seq_matches[x].append(seq_pairs[y])
+                elif seq_pairs[y] in parts_list[x].sequence[:35]:
+                    seq_matches[x].append(seq_pairs[y])
+    combs = []
+    for x in itertools.product(*seq_matches):
+        combs.append(x)
+    for comb in combs:
+        if len(comb) == len(set(comb)):
+            return comb
+    #if there are no possible combinations
+    return None
 
 # '/' path
 class MainHandler(Handler):
@@ -311,13 +344,14 @@ class MainHandler(Handler):
         else:
             for record in SeqIO.parse("/var/www/ibiocad/iBioCAD/templates/pET-26b.fa","fasta"):
                 default_backbone = record
-        default_config = {"backbone":default_backbone}
+        default_config = {"backbone":default_backbone,"golden_gate_method":"regular_assembly"}
         parts_list,session_id = self.get_parts_list()
         app = webapp2.get_app()
         if "assembly_config" not in app.registry.get(session_id).keys() or app.registry[session_id]["assembly_config"] is None:
             app.registry[session_id]["assembly_config"] = default_config
         assembly_config = app.registry.get(session_id)["assembly_config"]
         backbone_sequence = assembly_config["backbone"].seq
+        golden_gate_method = assembly_config["golden_gate_method"]
         #Run Yeast Assembly
         if self.request.POST.get("assembly_method") == "Yeast_Assembly":
             parts_list,session_id = self.update_part_list()
@@ -329,7 +363,7 @@ class MainHandler(Handler):
                     part.assembly_method = "Yeast_Assembly"
                 for i in range(len(unpacked_list)):
                     if len(unpacked_list) < 2:
-                        break
+                        self.redirect('/')
                     if i == 0:
                         if len(unpacked_list[i].sequence) >= 20:
                             unpacked_list[i].primer_forward = backbone_sequence[-40:] + unpacked_list[i].sequence[:20]
@@ -376,7 +410,7 @@ class MainHandler(Handler):
                 #parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
                 for i in range(len(unpacked_list)):
                     if len(unpacked_list) < 2:
-                        break
+                        self.redirect('/')
                     if i == 0:
                         if len(unpacked_list[i+1].sequence) >= 40:
                             unpacked_list[i].sequence = backbone_sequence[-40:] + unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:40]
@@ -409,7 +443,7 @@ class MainHandler(Handler):
                     part.assembly_method = "Gibson_Assembly"
                 for i in range(len(unpacked_list)):
                     if len(unpacked_list) < 2:
-                        break
+                        self.redirect('/')
                     if i == 0:
                         if len(unpacked_list[i].sequence) >= 25:
                             unpacked_list[i].primer_forward = backbone_sequence[-25:] + unpacked_list[i].sequence[:25]
@@ -456,7 +490,7 @@ class MainHandler(Handler):
                 #parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
                 for i in range(len(unpacked_list)):
                     if len(unpacked_list) < 2:
-                        break
+                        self.redirect('/')
                     if i == 0:
                         if len(unpacked_list[i+1].sequence) >= 25:
                             unpacked_list[i].sequence = backbone_sequence[-25:] + unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:25]
@@ -481,14 +515,14 @@ class MainHandler(Handler):
         if self.request.POST.get("assembly_method") == "LCR":
             parts_list,session_id = self.update_part_list()
             builds_list = builds(parts_list)
-            app = webapp2.get_app()
-            app.registry[session_id]['builds_list'] = builds_list
+            application = webapp2.get_app()
+            application.registry[session_id]['builds_list'] = builds_list
             for unpacked_list in builds_list:
                 for part in unpacked_list:
                     part.assembly_method = "LCR"
                 for i in range(len(unpacked_list)):
                     if len(unpacked_list)<2:
-                        break
+                        self.redirect('/')
                     if i == (len(unpacked_list)-1):
                         unpacked_list[i].bridge_with_next_part = create_LCR_bridge(unpacked_list[i].sequence,backbone_sequence[:200])
                     if i == 0:
@@ -501,25 +535,86 @@ class MainHandler(Handler):
         if self.request.POST.get("assembly_method") == "Type_II_Restriction_Enzyme":
             parts_list,session_id = self.update_part_list()
             builds_list = builds(parts_list)
-            app = webapp2.get_app()
-            app.registry[session_id]['builds_list'] = builds_list
+            application = webapp2.get_app()
+            application.registry[session_id]['builds_list'] = builds_list
+            new_backbone_sequence = backbone_sequence
             golden_gate_overhangs = [
                 "ccct","gctc","cggt","gtgc","agcg","ctgt","tgct","atgg","gact","ggac","tccg","ccag","cagc","gttg","cgaa","ccat"
             ]
-            for unpacked_list in builds_list:
-                for part in unpacked_list:
-                    part.assembly_method = "Type_II_Restriction_Enzyme"
-                    if "ggtctc" or "gagacc" in part.sequence.lower():
-                        golden_gate_error = "BsaI_in_seq"
-                for i in range(len(unpacked_list)):
-                    if golden_gate_error != "":
-                        break
-                    if len(unpacked_list) > 16:
-                        break
-                    unpacked_list[i].primer_forward = "aaggtctca" + golden_gate_overhangs[i] + unpacked_list[i].sequence[:20]
-                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-20:] + golden_gate_overhangs[i+1] + "agagaccaa")
-                    unpacked_list[i].sequence = "aaggtctca" + golden_gate_overhangs[i] + unpacked_list[i].sequence + golden_gate_overhangs[i+1] + "agagaccaa"
+            if golden_gate_method == "regular_assembly":
+                for unpacked_list in builds_list:
+                    for part in unpacked_list:
+                        part.assembly_method = "Type_II_Restriction_Enzyme"
+                        if "ggtctc" or "gagacc" in part.sequence.lower():
+                            golden_gate_error = "BsaI_in_seq"
+                    for i in range(len(unpacked_list)):
+                        if len(unpacked_list)<2:
+                            self.redirect('/')
+                        if golden_gate_error != "":
+                            break
+                        if len(unpacked_list) > 16:
+                            break
+                        unpacked_list[i].primer_forward = "aaggtctca" + golden_gate_overhangs[i] + unpacked_list[i].sequence[:20]
+                        unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-20:] + golden_gate_overhangs[i+1] + "agagaccaa")
+                        unpacked_list[i].sequence = "aaggtctca" + golden_gate_overhangs[i] + unpacked_list[i].sequence + golden_gate_overhangs[i+1] + "agagaccaa"
+            if golden_gate_method == "scarless_assembly":
+                for unpacked_list in builds_list:
+                    for part in unpacked_list:
+                        part.assembly_method = "Type_II_Restriction_Enzyme"
+                        if "ggtctc" or "gagacc" in part.sequence.lower():
+                            golden_gate_error = "BsaI_in_seq"
+                    for i in range(len(unpacked_list)):
+                        if len(unpacked_list)<2:
+                            self.redirect('/')
+                        if golden_gate_error != "":
+                            break
+                        if len(unpacked_list) > 16:
+                            break
+                        gg_opt = golden_gate_optimization(unpacked_list,backbone_sequence)
+                        if gg_opt is None:
+                            golden_gate_error = "no_efficient_overhang_combinations"
+                            break
+                        if i == 0:
+                            if gg_opt[0] in new_backbone_sequence[-35:]:
+                                new_backbone_sequence = new_backbone_sequence[:new_backbone_sequence.find(gg_opt[0])] + gg_opt[0] + "agagaccaa"
+                                unpacked_list[0].primer_forward = "aaggtctca" + new_backbone_sequence[new_backbone_sequence.find(gg_opt[0]):-9] + unpacked_list[0].sequence[:20]
+                                unpacked_list[0].sequence = "aaggtctca" + new_backbone_sequence[new_backbone_sequence.find(gg_opt[0]):-9] + unpacked_list[0].sequence
+                            elif gg_opt[0] in unpacked_list[0].sequence[:35]:
+                                new_backbone_sequence = new_backbone_sequence + unpacked_list[0].sequence[:unpacked_list[0].sequence.find(gg_opt[0])] + gg_opt[0] + "agagaccaa"
+                                unpacked_list[0].primer_forward = "aaggtctca" + unpacked_list[0].sequence[unpacked_list[0].sequence.find(gg_opt[0]):unpacked_list[0].sequence.find(gg_opt[0])+20]
+                                unpacked_list[0].sequence = "aaggtctca" + unpacked_list[0].sequence[unpacked_list[0].sequence.find(gg_opt[0]):]
+                        elif i == len(unpacked_list)-1:
+                            if gg_opt[-1] in new_backbone_sequence[:35]:
+                                new_backbone_sequence = "aaggtctca" + new_backbone_sequence[new_backbone_sequence.find(gg_opt[-1]):]
+                                unpacked_list[-1].primer_reverse = reverse_complement(unpacked_list[-1].sequence[-20:] + new_backbone_sequence[9:new_backbone_sequence.find(gg_opt[-1])] + gg_opt[-1] + "agagaccaa")
+                                unpacked_list[-1].sequence = unpacked_list[-1].sequence + new_backbone_sequence[:new_backbone_sequence.find(gg_opt[-1])] + gg_opt[-1] + "agagaccaa"
+                            elif gg_opt[-1] in unpacked_list[-1].sequence[-35:]:
+                                new_backbone_sequence = "aaggtctca" + unpacked_list[-1].sequence[unpacked_list[-1].sequence.find(gg_opt[-1]):] + new_backbone_sequence
+                                unpacked_list[-1].primer_reverse = reverse_complement(unpacked_list[-1].sequence[unpacked_list[-1].sequence.find(gg_opt[-1])-20:unpacked_list[-1].sequence.find(gg_opt[-1])] + gg_opt[-1] + "agagaccaa")
+                                unpacked_list[-1].sequence = unpacked_list[-1].sequence[:unpacked_list[-1].sequence.find(gg_opt[-1])] + gg_opt[-1] + "agagaccaa"
+                            if gg_opt[-2] in unpacked_list[-1].sequence[:35]:
+                                unpacked_list[-2].primer_reverse = reverse_complement(unpacked_list[-2].sequence[-20:] + unpacked_list[-1].sequence[:unpacked_list[-1].sequence.find(gg_opt[-2])] + gg_opt[-2] + "agagaccaa")
+                                unpacked_list[-1].primer_forward = "aaggtctca" + unpacked_list[-1].sequence[unpacked_list[-1].sequence.find(gg_opt[-2]):unpacked_list[-1].sequence.find(gg_opt[-2])+20]
+                                unpacked_list[-1].sequence = "aaggtctca" + unpacked_list[-1].sequence[unpacked_list[-1].sequence.find(gg_opt[-2]):]
+                                unpacked_list[-2].sequence = unpacked_list[-2].sequence + unpacked_list[-1].sequence[:unpacked_list[-1].sequence.find(gg_opt[-2])] + gg_opt[-2] + "agagaccaa"
+                            elif gg_opt[-2] in unpacked_list[-2].sequence[-35:]:
+                                unpacked_list[-2].primer_reverse = reverse_complement(unpacked_list[-2].sequence[unpacked_list[-2].sequence.find(gg_opt[-2])-20:unpacked_list[-2].sequence.find(gg_opt[-2])] + gg_opt[-2] + "agagaccaa")
+                                unpacked_list[-1].primer_forward = "aaggtctca" + unpacked_list[-2].sequence[unpacked_list[-2].sequence.find(gg_opt[-2]):] + unpacked_list[-1].sequence[:20]
+                                unpacked_list[-1].sequence = "aaggtctca" + unpacked_list[-1].sequence[unpacked_list[-1].sequence.find(gg_opt[-2]):]
+                                unpacked_list[-2].sequence = unpacked_list[-2].sequence[:unpacked_list[-2].sequence.find(gg_opt[-2])] + gg_opt[-2] + "agagaccaa"
+                        else:
+                            if gg_opt[i] in unpacked_list[i].sequence[:35]:
+                                unpacked_list[i-1].primer_reverse = reverse_complement(unpacked_list[i-1].sequence[-20:] + unpacked_list[i].sequence[:unpacked_list[i].sequence.find(gg_opt[i])] + gg_opt[i] + "agagaccaa")
+                                unpacked_list[i].primer_forward = "aaggtctca" + unpacked_list[i].sequence[unpacked_list[i].sequence.find(gg_opt[i]):unpacked_list[i].sequence.find(gg_opt[i])+20]
+                                unpacked_list[i].sequence = "aaggtctca" + unpacked_list[i].sequence[unpacked_list[i].sequence.find(gg_opt[i]):]
+                                unpacked_list[i-1].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence[:unpacked_list[i].sequence.find(gg_opt[i])] + gg_opt[i] + "agagaccaa"
+                            elif gg_opt[i] in unpacked_list[i-1].sequence[-35:]:
+                                unpacked_list[i-1].primer_reverse = reverse_complement(unpacked_list[i-1].sequence[unpacked_list[i-1].sequence.find(gg_opt[i])-20:unpacked_list[i-1].sequence.find(gg_opt[i])] + gg_opt[i] + "agagaccaa")
+                                unpacked_list[i].primer_forward = "aaggtctca" + unpacked_list[i-1].sequence[unpacked_list[i-1].sequence.find(gg_opt[i]):] + unpacked_list[i].sequence[:20]
+                                unpacked_list[i].sequence = "aaggtctca" + unpacked_list[i].sequence[unpacked_list[i].sequence.find(gg_opt[i]):]
+                                unpacked_list[i-1].sequence = unpacked_list[i-1].sequence[:unpacked_list[i-1].sequence.find(gg_opt[i])] + gg_opt[i] + "agagaccaa"
             parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
+            application.registry[session_id]["new_backbone_sequence"] = new_backbone_sequence
             if golden_gate_error == "":
                 self.redirect("/assembly")
         self.render("main_page.html",golden_gate_error=golden_gate_error,css=css,js=js,parts_list=parts_list)
@@ -558,9 +653,9 @@ class InputPartHandler(Handler):
         sequence = ""
         description = ""
         session_id = self.get_parts_list()[1]
-        app = webapp2.get_app()
-        if "file_input" in app.registry.get(session_id).keys():
-            file = app.registry.get(session_id).pop("file_input")
+        application = webapp2.get_app()
+        if "file_input" in application.registry.get(session_id).keys():
+            file = application.registry.get(session_id).pop("file_input")
             name += file[0]
             sequence += file[1]
             description += file[2]
@@ -633,8 +728,9 @@ class InputPartHandler(Handler):
 class AssemblyHandler(Handler):
     def get(self):
         parts_list,session_id = self.get_parts_list()
-        app = webapp2.get_app()
+        application = webapp2.get_app()
         builds_list = app.registry.get(session_id)['builds_list']
+        new_backbone_sequence = app.registry.get(session_id)["new_backbone_sequence"]
         import csv
         if is_local:
             assembly_file = "constructs/plasmid_assembly_%s.csv"
@@ -645,6 +741,8 @@ class AssemblyHandler(Handler):
             csvdictwriter = csv.DictWriter(csvfile,fieldnames=fieldnames)
             csvwriter = csv.writer(csvfile)
             for unpacked_list in builds_list:
+                if len(unpacked_list)<2:
+                    break
                 if unpacked_list[0].assembly_method == "Yeast_Assembly" or unpacked_list[0].assembly_method == "Gibson_Assembly" or unpacked_list[0].assembly_method == "Type_II_Restriction_Enzyme":
                     csvdictwriter2 = csv.DictWriter(csvfile,fieldnames=['Name','','Sequence'])
                 elif unpacked_list[0].assembly_method == "LCR":
@@ -658,6 +756,7 @@ class AssemblyHandler(Handler):
                     csvdictwriter.writeheader()
                 except:
                     csvwriter.writerow(fieldnames)
+                csvwriter.writerow({'Name':"Backbone",'Type':'','Sequence':new_backbone_sequence,'Description':''})
                 for part in unpacked_list:
                     csvdictwriter.writerow({'Name':part.name,'Type':part.type,'Sequence':part.sequence,'Description':part.description})
                 csvwriter.writerow([])
@@ -692,8 +791,7 @@ class AssemblyHandler(Handler):
         import datetime
         filename = "plasmid_assembly_%s.csv"%datetime.date.today()
         os.remove(assembly_file%session_id)
-        self.render("assembly_page.html",builds_list=builds_list,data_uri=data_uri,filename=filename,css=css)
-
+        self.render("assembly_page.html",builds_list=builds_list,new_backbone_sequence=new_backbone_sequence,data_uri=data_uri,filename=filename,css=css)
 class ConstructDownloadHandler(Handler):
     def get(self):
         parts_list,session_id = self.get_parts_list()
@@ -724,16 +822,16 @@ class ConfigHandler(Handler):
             #path on server
             for record in SeqIO.parse("/var/www/ibiocad/iBioCAD/templates/pET-26b.fa","fasta"):
                 default_backbone = record
-        default_config = {"backbone":default_backbone}
+        default_config = {"backbone":default_backbone,"golden_gate_method":"regular_assembly"}
         parts_list,session_id = self.get_parts_list()
-        app = webapp2.get_app()
-        if "assembly_config" not in app.registry.get(session_id).keys() or app.registry[session_id]["assembly_config"] is None:
-            app.registry[session_id]["assembly_config"] = default_config
-        assembly_config = app.registry.get(session_id)["assembly_config"]
+        application = webapp2.get_app()
+        if "assembly_config" not in application.registry.get(session_id).keys() or application.registry[session_id]["assembly_config"] is None:
+            application.registry[session_id]["assembly_config"] = default_config
+        assembly_config = application.registry.get(session_id)["assembly_config"]
         self.render("config.html",css=css,assembly_config=assembly_config)
     def post(self):
         parts_list,session_id = self.get_parts_list()
-        app = webapp2.get_app()
+        application = webapp2.get_app()
         if self.request.POST.get('cancel')=="cancel":
             self.redirect("/")
         if self.request.POST.get('save')=="save":
