@@ -344,14 +344,16 @@ class MainHandler(Handler):
         else:
             for record in SeqIO.parse("/var/www/ibiocad/iBioCAD/templates/pET-26b.fa","fasta"):
                 default_backbone = record
-        default_config = {"backbone":default_backbone,"golden_gate_method":"regular_assembly"}
+        default_config = {"backbone":default_backbone,"Golden_gate_method":"regular_assembly"}
         parts_list,session_id = self.get_parts_list()
-        app = webapp2.get_app()
-        if "assembly_config" not in app.registry.get(session_id).keys() or app.registry[session_id]["assembly_config"] is None:
-            app.registry[session_id]["assembly_config"] = default_config
-        assembly_config = app.registry.get(session_id)["assembly_config"]
+        application = webapp2.get_app()
+        if "assembly_config" not in application.registry.get(session_id).keys() or application.registry[session_id]["assembly_config"] is None:
+            application.registry[session_id]["assembly_config"] = default_config
+        assembly_config = application.registry.get(session_id)["assembly_config"]
         backbone_sequence = assembly_config["backbone"].seq
-        golden_gate_method = assembly_config["golden_gate_method"]
+        new_backbone_sequence = backbone_sequence
+        application.registry[session_id]["new_backbone_sequence"] = new_backbone_sequence
+        golden_gate_method = assembly_config["Golden_gate_method"]
         #Run Yeast Assembly
         if self.request.POST.get("assembly_method") == "Yeast_Assembly":
             parts_list,session_id = self.update_part_list()
@@ -729,8 +731,8 @@ class AssemblyHandler(Handler):
     def get(self):
         parts_list,session_id = self.get_parts_list()
         application = webapp2.get_app()
-        builds_list = app.registry.get(session_id)['builds_list']
-        new_backbone_sequence = app.registry.get(session_id)["new_backbone_sequence"]
+        builds_list = application.registry.get(session_id)['builds_list']
+        new_backbone_sequence = application.registry.get(session_id)["new_backbone_sequence"]
         import csv
         if is_local:
             assembly_file = "constructs/plasmid_assembly_%s.csv"
@@ -756,7 +758,7 @@ class AssemblyHandler(Handler):
                     csvdictwriter.writeheader()
                 except:
                     csvwriter.writerow(fieldnames)
-                csvwriter.writerow({'Name':"Backbone",'Type':'','Sequence':new_backbone_sequence,'Description':''})
+                csvwriter.writerow(['Backbone','',new_backbone_sequence,''])
                 for part in unpacked_list:
                     csvdictwriter.writerow({'Name':part.name,'Type':part.type,'Sequence':part.sequence,'Description':part.description})
                 csvwriter.writerow([])
@@ -822,7 +824,7 @@ class ConfigHandler(Handler):
             #path on server
             for record in SeqIO.parse("/var/www/ibiocad/iBioCAD/templates/pET-26b.fa","fasta"):
                 default_backbone = record
-        default_config = {"backbone":default_backbone,"golden_gate_method":"regular_assembly"}
+        default_config = {"backbone":default_backbone,"Golden_gate_method":"regular_assembly"}
         parts_list,session_id = self.get_parts_list()
         application = webapp2.get_app()
         if "assembly_config" not in application.registry.get(session_id).keys() or application.registry[session_id]["assembly_config"] is None:

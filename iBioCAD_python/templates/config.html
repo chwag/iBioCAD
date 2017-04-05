@@ -72,8 +72,13 @@
                 <a class="ui green button" href="#enzyme_category" style="display: inline-flex">Type II Restriction Enzyme</a>
                 <h1>Type II Restriction Enzyme Assembly</h1>
                 <label>Golden Gate assembly type</label><br>
+                {%if assembly_config['Golden_gate_method'] == "regular_assembly"%}
                 <input type="radio" name="Golden_gate_method" value="regular_assembly" checked> Regular assembly<br>
                 <input type="radio" name="Golden_gate_method" value="scarless_assembly"> Scarless assembly<br><br><br>
+                {%else%}
+                <input type="radio" name="Golden_gate_method" value="regular_assembly"> Regular assembly<br>
+                <input type="radio" name="Golden_gate_method" value="scarless_assembly" checked> Scarless assembly<br><br><br>
+                {%endif%}
                 <button type="submit" class="ui blue button" name="save" value="save">Save</button>
                 <button type="submit" class="ui red button" name="cancel" value="cancel">Cancel</button>
             </div>
