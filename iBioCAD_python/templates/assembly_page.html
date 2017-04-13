@@ -17,11 +17,23 @@
         {%endif%}{%endfor%}
     </a>
     {%endfor%}
+    <br>
+    {%if builds_list[0][0].assembly_method == "Yeast_Assembly"%}
+    Yeast Assembly
+    {%elif builds_list[0][0].assembly_method == "Gibson_Assembly"%}
+    Gibson Assembly
+    {%elif builds_list[0][0].assembly_method == "LCR"%}
+    LCR Assembly
+    {%elif builds_list[0][0].assembly_method == "Type_II_Restriction_Enzyme"%}
+    Type II Restriction Enzyme (Golden Gate) Assembly
+    {%else%}
+    {{builds_list[0][0].assembly_method}}
+    {%endif%}
 {%for parts_list in builds_list %}
     <div class="ui raised segment container" style="top:10%">
         {%if parts_list[0].assembly_method == "Yeast_Assembly" or parts_list[0].assembly_method == "Gibson_Assembly" or parts_list[0].assembly_method == "Type_II_Restriction_Enzyme"%}
         <div id={{"builds_list"~loop.index}} style="font-size: large">
-            {%for part in parts_list %}
+            {%for part in parts_list%}
             {{part.name}}
             {%if not loop.last %},
             {%endif%}{%endfor%}
@@ -59,7 +71,7 @@
             </tbody>
         </table>
         {%endif%}
-        {%if parts_list[0].assembly_method == "LCR"%}
+        {%if parts_list[0].assembly_method == 'LCR'%}
         <div id={{"builds_list"~loop.index}} style="font-size: large">
             {%for part in parts_list %}
             {{part.name}}

@@ -433,6 +433,7 @@ class MainHandler(Handler):
                         else:
                             unpacked_list[i].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence + unpacked_list[i+1].sequence
             parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
+            app.registry[session_id]['builds_list'] = builds_list
             self.redirect("/assembly")
         #Run Gibson Assembly
         if self.request.POST.get("assembly_method") == "Gibson_Assembly":
@@ -513,6 +514,7 @@ class MainHandler(Handler):
                         else:
                             unpacked_list[i].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence + unpacked_list[i+1].sequence
             parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
+            app.registry[session_id]['builds_list'] = builds_list
             self.redirect("/assembly")
         if self.request.POST.get("assembly_method") == "LCR":
             parts_list,session_id = self.update_part_list()
@@ -532,13 +534,14 @@ class MainHandler(Handler):
                     if i < (len(unpacked_list)-1):
                         unpacked_list[i].bridge_with_next_part = create_LCR_bridge(unpacked_list[i].sequence,unpacked_list[i+1].sequence)
             parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
+            application.registry[session_id]['builds_list'] = builds_list
             self.redirect("/assembly")
         golden_gate_error=""
         if self.request.POST.get("assembly_method") == "Type_II_Restriction_Enzyme":
             parts_list,session_id = self.update_part_list()
             builds_list = builds(parts_list)
-            application = webapp2.get_app()
-            application.registry[session_id]['builds_list'] = builds_list
+            app = webapp2.get_app()
+            app.registry[session_id]['builds_list'] = builds_list
             new_backbone_sequence = backbone_sequence
             golden_gate_overhangs = [
                 "ccct","gctc","cggt","gtgc","agcg","ctgt","tgct","atgg","gact","ggac","tccg","ccag","cagc","gttg","cgaa","ccat"
@@ -547,8 +550,8 @@ class MainHandler(Handler):
                 for unpacked_list in builds_list:
                     for part in unpacked_list:
                         part.assembly_method = "Type_II_Restriction_Enzyme"
-                        if "ggtctc" or "gagacc" in part.sequence.lower():
-                            golden_gate_error = "BsaI_in_seq"
+                        if "ggtctc" in part.sequence.lower() or "gagacc" in part.sequence.lower():
+                            golden_gate_error = "BsaI_in_seq" +"|"+ part.name + "|" + part.sequence.lower()
                     for i in range(len(unpacked_list)):
                         if len(unpacked_list)<2:
                             self.redirect('/')
@@ -563,8 +566,8 @@ class MainHandler(Handler):
                 for unpacked_list in builds_list:
                     for part in unpacked_list:
                         part.assembly_method = "Type_II_Restriction_Enzyme"
-                        if "ggtctc" or "gagacc" in part.sequence.lower():
-                            golden_gate_error = "BsaI_in_seq"
+                        if "ggtctc" in part.sequence.lower() or "gagacc" in part.sequence.lower():
+                            golden_gate_error = "BsaI_in_seq" +"|"+ part.name + "|" + part.sequence.lower()
                     for i in range(len(unpacked_list)):
                         if len(unpacked_list)<2:
                             self.redirect('/')
@@ -616,7 +619,8 @@ class MainHandler(Handler):
                                 unpacked_list[i].sequence = "aaggtctca" + unpacked_list[i].sequence[unpacked_list[i].sequence.find(gg_opt[i]):]
                                 unpacked_list[i-1].sequence = unpacked_list[i-1].sequence[:unpacked_list[i-1].sequence.find(gg_opt[i])] + gg_opt[i] + "agagaccaa"
             parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
-            application.registry[session_id]["new_backbone_sequence"] = new_backbone_sequence
+            app.registry[session_id]['builds_list'] = builds_list
+            app.registry[session_id]["new_backbone_sequence"] = new_backbone_sequence
             if golden_gate_error == "":
                 self.redirect("/assembly")
         self.render("main_page.html",golden_gate_error=golden_gate_error,css=css,js=js,parts_list=parts_list)
@@ -793,7 +797,8 @@ class AssemblyHandler(Handler):
         import datetime
         filename = "plasmid_assembly_%s.csv"%datetime.date.today()
         os.remove(assembly_file%session_id)
-        self.render("assembly_page.html",builds_list=builds_list,new_backbone_sequence=new_backbone_sequence,data_uri=data_uri,filename=filename,css=css)
+        part_dir = builds_list[0][0].assembly_method
+        self.render("assembly_page.html",builds_list=builds_list,part_dir=part_dir,new_backbone_sequence=new_backbone_sequence,data_uri=data_uri,filename=filename,css=css)
 class ConstructDownloadHandler(Handler):
     def get(self):
         parts_list,session_id = self.get_parts_list()
@@ -856,7 +861,7 @@ class ConfigHandler(Handler):
                             for record in SeqIO.parse("/var/www/ibiocad/iBioCAD/templates/pET-26b.fa","fasta"):
                                 application.registry[session_id]["assembly_config"][key] = record
                 else:
-                    application.registry[session_id]["assembly_config"][key] = self.request.POST.get('key')
+                    application.registry[session_id]["assembly_config"][key] = self.request.POST.get(key)
             self.redirect("/")
 
 #Initialize the web framework. URL paths are attached to their respective handlers

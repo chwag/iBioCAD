@@ -51,9 +51,28 @@
       <file leaf-file-name="ibiocad.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/ibiocad.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.3809524">
-              <caret line="353" column="49" selection-start-line="353" selection-start-column="49" selection-end-line="353" selection-end-column="49" />
+            <state vertical-scroll-proportion="7.197279">
+              <caret line="883" column="10" selection-start-line="883" selection-start-column="10" selection-end-line="883" selection-end-column="10" />
               <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="assembly_page.html" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/templates/assembly_page.html">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="-13.967742">
+              <caret line="29" column="39" selection-start-line="29" selection-start-column="39" selection-end-line="29" selection-end-column="39" />
+              <folding>
+                <element signature="n#style#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
+                <element signature="n#style#0;n#a#0;n#body#0;n#html#0;n#!!top" expanded="true" />
+                <element signature="n#style#0;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+                <element signature="n#style#0;n#div#0;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+                <element signature="n#style#0;n#table#0;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+                <element signature="n#style#0;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+                <element signature="n#style#0;n#table#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+                <element signature="n#style#0;n#table#2;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -61,7 +80,7 @@
       <file leaf-file-name="config.html" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/templates/config.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-21.064516">
+            <state vertical-scroll-proportion="-17.516129">
               <caret line="79" column="90" selection-start-line="79" selection-start-column="90" selection-end-line="79" selection-end-column="90" />
               <folding />
             </state>
@@ -83,8 +102,8 @@
       <file leaf-file-name="main_page.html" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/templates/main_page.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-18.225807">
-              <caret line="207" column="64" selection-start-line="207" selection-start-column="28" selection-end-line="207" selection-end-column="64" />
+            <state vertical-scroll-proportion="-16.096775">
+              <caret line="204" column="63" selection-start-line="204" selection-start-column="63" selection-end-line="204" selection-end-column="63" />
               <folding>
                 <element signature="n#style#0;n#body#0;n#html#0;n#!!top" expanded="true" />
                 <element signature="n#style#0;n#a#1;n#div#0;n#div#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
@@ -156,11 +175,11 @@
         <option value="$PROJECT_DIR$/templates/welcome_page.html" />
         <option value="$USER_HOME$/AppData/Local/Temp/faef7ad8-cff4-439e-9b30-9aabf8555e75/var/www/ibiocad/iBioCAD/ibiocad.py" />
         <option value="$USER_HOME$/AppData/Local/Temp/b86217d5-bcb4-4ae1-bb5b-5466ea08ff42/var/log/httpd/ibiocad-error.log" />
-        <option value="$PROJECT_DIR$/templates/main_page.html" />
         <option value="$PROJECT_DIR$/golden_gate_opt.py" />
         <option value="$USER_HOME$/AppData/Local/Temp/b86217d5-bcb4-4ae1-bb5b-5466ea08ff42/var/www/ibiocad/iBioCAD/ibiocad.py" />
-        <option value="$PROJECT_DIR$/templates/assembly_page.html" />
         <option value="$PROJECT_DIR$/templates/config.html" />
+        <option value="$PROJECT_DIR$/templates/main_page.html" />
+        <option value="$PROJECT_DIR$/templates/assembly_page.html" />
         <option value="$PROJECT_DIR$/ibiocad.py" />
       </list>
     </option>
@@ -201,8 +220,8 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="Scratches" />
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -623,7 +642,7 @@
     </history-entry>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-9" y="-9" width="1938" height="1048" extended-state="6" />
+    <frame x="-9" y="-9" width="1938" height="1048" extended-state="7" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.140625" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -1027,10 +1046,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/templates/config.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-17.516129">
+          <caret line="79" column="90" selection-start-line="79" selection-start-column="90" selection-end-line="79" selection-end-column="90" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/templates/main_page.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-18.225807">
-          <caret line="207" column="64" selection-start-line="207" selection-start-column="28" selection-end-line="207" selection-end-column="64" />
+        <state vertical-scroll-proportion="-16.096775">
+          <caret line="204" column="63" selection-start-line="204" selection-start-column="63" selection-end-line="204" selection-end-column="63" />
           <folding>
             <element signature="n#style#0;n#body#0;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#a#1;n#div#0;n#div#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
@@ -1057,8 +1084,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/templates/assembly_page.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.61222094">
-          <caret line="130" column="44" selection-start-line="130" selection-start-column="44" selection-end-line="130" selection-end-column="44" />
+        <state vertical-scroll-proportion="-13.967742">
+          <caret line="29" column="39" selection-start-line="29" selection-start-column="39" selection-end-line="29" selection-end-column="39" />
           <folding>
             <element signature="n#style#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#a#0;n#body#0;n#html#0;n#!!top" expanded="true" />
@@ -1072,26 +1099,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/AppData/Local/Temp/b86217d5-bcb4-4ae1-bb5b-5466ea08ff42/var/www/ibiocad/iBioCAD/ibiocad.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.39229023">
-          <caret line="759" column="50" selection-start-line="759" selection-start-column="50" selection-end-line="759" selection-end-column="50" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/templates/config.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-21.064516">
-          <caret line="79" column="90" selection-start-line="79" selection-start-column="90" selection-end-line="79" selection-end-column="90" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/ibiocad.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.3809524">
-          <caret line="353" column="49" selection-start-line="353" selection-start-column="49" selection-end-line="353" selection-end-column="49" />
+        <state vertical-scroll-proportion="7.197279">
+          <caret line="883" column="10" selection-start-line="883" selection-start-column="10" selection-end-line="883" selection-end-column="10" />
           <folding />
         </state>
       </provider>

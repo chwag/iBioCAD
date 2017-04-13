@@ -200,9 +200,9 @@ function dragstart(e) {
         <button type="submit" class="ui small black button" name="load_construct" value="load_construct">Load Construct</button>
     </form>
     </div>
-{%if golden_gate_error == "BsaI_in_seq" %}
+{%if "BsaI_in_seq" in golden_gate_error%}
 <script>
-    alert("A sequence contains a BsaI recognition site!");
+    alert("A sequence contains a BsaI recognition site! Error: {{golden_gate_error}}");
     window.open('', '_self', ''); window.close();
 </script>
 {%elif golden_gate_error == "no_efficient_overhang_combinations"%}
