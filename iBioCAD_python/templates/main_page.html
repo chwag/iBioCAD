@@ -83,20 +83,20 @@ function dragstart(e) {
                 <!--<img src="/home/ibiocadsite/public_html/cgi-bin/iBioCAD/images/ibiocad_logo.png" alt="iBioCAD" height="120" width="120"> -->
                 <img class="ui image" src="http://web.engr.illinois.edu/~tohidif2/iBioCAD/img/ibiocad_logo.png" alt="iBioCAD height=" 120" width="120" ">
                 </a>
-                <a id="wrapper-font" class="active item" style="padding-top:7px;padding-bottom:7px;padding-left:14px;padding-right:14px;margin-left:3.5px;margin-right:3.5px;">
+                <!--<a id="wrapper-font" class="active item" style="padding-top:7px;padding-bottom:7px;padding-left:14px;padding-right:14px;margin-left:3.5px;margin-right:3.5px;">
                     Design
-                </a>
+                </a>-->
                 <a id="wrapper-font" href="https://github.com/scottweis1/iBioCAD" class="active item" style="padding-top:7px;padding-bottom:7px;padding-left:14px;padding-right:14px;margin-left:3.5px;margin-right:3.5px;">
                     Documentation
                 </a>
-                <form method="post" style="display: flex">
+                <!--<form method="post" style="display: flex">
                 <button id="wrapper-font" class="item button" type="submit" name="login" value="goto_login">Login</button>
                     <button id="wrapper-font" class="ui item button" type="submit" name="logout" value="goto_logout">Logout</button>
-                </form>
-                <a id="export" class="active right floated item button">
+                </form>-->
+                <!--<a id="export" class="active right floated item button">
                     Export to the Scheduler
-                </a>
-                <a id="logo-top-right" class = "item" style="margin-left:0px">
+                </a>-->
+                <a id="logo-top-right" class = "item right aligned" style="margin-left:0px;right:5%;">
                     <img class="ui image" src="http://web.engr.illinois.edu/~tohidif2/iBioCAD/img/iBioFab_logo.png" alt="iBioFab height="60" width="130" ">
                 </a>
 
@@ -117,10 +117,10 @@ function dragstart(e) {
                     <div class="field">
                         <button class="mini ui middle fluid blue button" id="fileinput" type="submit" name="input_part" value="goto_input_window">Input New Part</button>
                     </div>
-                    <div class="field">
+                    <!--<div class="field">
                         <button id="fileinput" class="mini ui middle fluid red button" type="submit" name="htpWiz" value="goto_htpWiz">High-throughput wizard</button>
-                    </div>
-                    {%if parts_list|length >= 2 %}
+                    </div>-->
+                    <!--{%if parts_list|length >= 2 %}
                     <svg height="20">
                         <circle id="readyCircle" cx="55" cy="10" r="7" fill="green" stroke="#000000" stroke-width="2"></circle>
                         <text x="0" y="15" font-family="arial" font-size="13px" fill="black">Ready</text>
@@ -130,17 +130,23 @@ function dragstart(e) {
                         <circle id="readyCircle" cx="55" cy="10" r="7" fill="red" stroke="#000000" stroke-width="2"></circle>
                         <text x="0" y="15" font-family="arial" font-size="13px" fill="black">Ready</text>
                     </svg>
-                    {%endif%}
+                    {%endif%}-->
                 </form>
+                <div class="ui raised segment">
+                    <a class="mini ui middle fluid red button" href="/config" style="font-size:14px;">
+                        <!--<img src="http://ibiocadsite.web.engr.illinois.edu/cgi-bin/iBioCAD/images/settings_icon.svg">Settings</img>-->
+                        Settings
+                    </a>
+                </div>
                 {%if golden_gate_error == "" %}
                 <form method="post" target="_blank" onsubmit="setTimeout(function () { window.location.reload(); }, 10)" class="ui form raised segment" enctype="multipart/form-data" style="padding-left:5px;padding-right:5px;margin-top:0px;">
                 {%else%}
                 <form method="post" class="ui form raised segment" enctype="multipart/form-data" style="padding-left:5px;padding-right:5px;margin-top:0px;">
                 {%endif%}
                     <p style="font-family:arial;color:black;font-size:14px;margin-bottom:10px;">Assembly Method
-                        <a href="/config">
+                        <!--<a href="/config">
                         <img src="http://ibiocadsite.web.engr.illinois.edu/cgi-bin/iBioCAD/images/settings_icon.svg" class="ui image right floated" style="top: -10px"></img>
-                        </a>
+                        </a>-->
                     </p>
                     <select id="Assembly_Method" class="compact" name="assembly_method" style="margin-bottom:15px">
                         <option value="Yeast_Assembly">Yeast Assembly</option>
@@ -185,7 +191,7 @@ function dragstart(e) {
         <img src="http://ibiocadsite.web.engr.illinois.edu/cgi-bin/iBioCAD/images/uiuc_logo.png" alt="UIUC height=" 40" width="40" ">
     </a>
     <a id="copyright">
-        © Copyright 2014 University of Illinois at Urbana-Champaign
+        © Copyright 2017 University of Illinois at Urbana-Champaign
         <br>
         Institute for Genomic Biology
     </a>
