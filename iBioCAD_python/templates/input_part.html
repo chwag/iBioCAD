@@ -12,6 +12,11 @@
         document.getElementById("static").style = "display: block"
         document.getElementById("dynamic").style = "display: none"
     }
+    function librarySwitch() {
+        document.getElementById("static").style = "display: none"
+        document.getElementById("dynamic").style = "display: none"
+        document.getElementById("library").style = "display: block!important"
+    }
 </script>
 <head>
     <meta charset="UTF-8">
@@ -19,6 +24,8 @@
 </head>
 {%if dynamic == "yes" %}
 <body onload="dynamicSwitch();">
+{%elif library == "yes" %}
+<body onload="librarySwitch();">
 {%else%}
 <body>
 {%endif%}
@@ -28,9 +35,15 @@
         <script>dynamicSwitch();</script>
         <input type="radio" name="input_type" value="static" onchange="staticSwitch()"> Static
         <input type="radio" name="input_type" value="dynamic" onchange="dynamicSwitch()" checked> Dynamic
+        <input type="radio" name="input_type" value="library" onchange="librarySwitch()"> Import From Library
+        {%elif library == "yes" %}
+        <input type="radio" name="input_type" value="static" onchange="staticSwitch()"> Static
+        <input type="radio" name="input_type" value="dynamic" onchange="dynamicSwitch()"> Dynamic
+        <input type="radio" name="input_type" value="library" onchange="librarySwitch()" checked> Import From Library
         {%else%}
         <input type="radio" name="input_type" value="static" onchange="staticSwitch()" checked> Static
-        <input type="radio" name="input_type" value="dynamic" onchange="dynamicSwitch()"> Dynamic
+        <input type="radio" name="input_type" value="dynamic" onchange="dynamicSwitch()" > Dynamic
+        <input type="radio" name="input_type" value="library" onchange="librarySwitch()"> Import From Library
         {%endif%}
     <div id="static">
     <div class="required field">
@@ -76,6 +89,28 @@
             {%if fileerror %}
             <div style="color:red;">{{fileerror}}</div>
             {%endif%}
+        </div>
+    </div>
+    <div id="library" style="display:none">
+        <div class="field">
+            <label>Import From Library</label>
+            <select name="library_inputs" style="border-color:black;" multiple>
+                <option value="HXT5p|Promoter">HXT5p (Promoter)</option>
+                <option value="HXT7p|Promoter">HXT7p (Promoter)</option>
+                <option value="TEF1p|Promoter">TEF1p (Promoter)</option>
+                <option value="TPl1p|Promoter">TPl1p (Promoter)</option>
+                <option value="baFAS|CDS">baFAS (CDS)</option>
+                <option value="GFP|CDS">GFP (CDS)</option>
+                <option value="lldp|CDS">lldp (CDS)</option>
+                <option value="mel|CDS">meI (CDS)</option>
+                <option value="melpsd|CDS">melpsd (CDS)</option>
+                <option value="psd|CDS">psd (CDS)</option>
+                <option value="Trp1|CDS">Trp1 (CDS)</option>
+                <option value="HXT7t|Terminator">HXT7t (Terminator)</option>
+                <option value="PGKt|Terminator">PGKt (Terminator)</option>
+                <option value="TEF1t|Terminator">TEF1t (Terminator)</option>
+                <option value="TPl1t|Terminator">TPl1t (Terminator)</option>
+            </select>
         </div>
     </div>
     <br>

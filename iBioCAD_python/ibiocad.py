@@ -32,6 +32,7 @@ from Bio.SeqUtils import MeltingTemp as mt
 from Bio import SeqIO
 is_local = False     #set file path to the local folder if True or server path if False
 import itertools
+import io
 
 #import stylesheets and javascript for web pages
 if is_local:
@@ -318,14 +319,30 @@ class MainHandler(Handler):
         if self.request.POST.get("export_dom"):
             parts_list,session_id = self.update_part_list()
         if self.request.POST.get("file_input")!= b'' and self.request.POST.get("file_input") is not None:
-            file = self.request.POST.get("file_input").file.read().decode("UTF-8").split("\r\n")
-            name = file[0][1:]
-            description = file[0][1:]
-            sequence = file[1]
-            session_id = self.get_parts_list()[1]
-            app = webapp2.get_app()
-            app.registry[session_id]["file_input"] = [name,sequence,description]
-            self.redirect("/inputpart")
+            parts_list,session_id = self.get_parts_list()
+            file = self.request.POST.get("file_input").file.read().decode("UTF-8")
+            if len(list(SeqIO.parse(io.StringIO(file),"fasta"))) > 1:
+                application = webapp2.get_app()
+                for record in SeqIO.parse(io.StringIO(file),"fasta"):
+                    parts_list.append(Part(record.name,"userDefined",record.seq))
+                application.registry[session_id]['parts_list'] = parts_list
+                self.redirect("/")
+            elif len(list(SeqIO.parse(io.StringIO(file),"fasta"))) == 1:
+                application = webapp2.get_app()
+                for record in SeqIO.parse(io.StringIO(file),"fasta"):
+                    name = record.name
+                    description = record.name
+                    sequence = record.seq
+                application.registry[session_id]["file_input"] = [name,sequence,description]
+                self.redirect("/inputpart")
+            else:
+                name = file.split("\r\n")[0][1:]
+                description = file.split("\r\n")[0][1:]
+                sequence = file.split("\r\n")[1]
+                session_id = self.get_parts_list()[1]
+                app = webapp2.get_app()
+                app.registry[session_id]["file_input"] = [name,sequence,description]
+                self.redirect("/inputpart")
         #If "Input New Part" clicked, opens input html page
         if self.request.POST.get("input_part")=="goto_input_window":
             self.redirect("/inputpart")
@@ -700,6 +717,15 @@ class InputPartHandler(Handler):
                     application.registry[session_id]['parts_list'] = parts_list
                     self.redirect("/")
                 self.render("input_part.html",css=css,js=js,nameerror="",dynnameerror=dynnameerror,fileerror=fileerror,dynname=dynname,dynamic="yes")
+
+            if self.request.POST.get('input_type') == "library":
+                library_imports = self.request.POST.getall("library_inputs")
+                parts_list,session_id = self.get_parts_list()
+                for library_input in library_imports:
+                    for record in SeqIO.parse("/var/www/ibiocad/iBioCAD/templates/%s.txt"%library_input.split("|")[0],"fasta"):
+                        parts_list.append(Part(record.name,library_input.split("|")[1],record.seq))
+                application.registry[session_id]['parts_list'] = parts_list
+                self.redirect("/")
 
             if self.request.POST.get('input_type') == "static":
                 dynname = ""
