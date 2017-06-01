@@ -103,6 +103,7 @@ class Handler(webapp2.RequestHandler):
         return parts_list,session_id
 
     def update_part_list(self,updated_parts_list=None):
+        application = webapp2.get_app()
         if updated_parts_list==None:
             exported_map = self.request.POST.get("export_dom")[:-1].split("|")
             if exported_map == ['']:
@@ -177,7 +178,7 @@ def make_session_id():
     number = str(randrange(0,999999999999))
     return verb+noun+number
 
-def generateSBOLdoc(parts_list,session_id):
+def generateSBOLdoc(builds_list,session_id):
     roles_dict = {"Promoter":"http://identifiers.org/so/SO:0000167",
                   "CDS":"http://identifiers.org/so/SO:0000316",
                   "Terminator":"http://identifiers.org/so/SO:0000141",
@@ -185,45 +186,44 @@ def generateSBOLdoc(parts_list,session_id):
                   "oriR":"http://identifiers.org/so/SO:0000296",
                   "userDefined":"http://identifiers.org/so/SO:0000101"
                   }
-    xml = """<?xml version="1.0" ?>
-    <rdf:RDF xmlns:pr="http://partsregistry.org" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:prov="http://www.w3.org/ns/prov#" xmlns:sbol="http://sbols.org/v2#">\n"""
-    for part in parts_list:
-        if isinstance(part,MultiPart):
-            for mpart in part.parts:
-                xml += """<sbol:Sequence rdf:about="http://ibiocadsite.web.engr.illinois.edu/seq/""" + mpart.name + '">\n'
-                xml += """\t<sbol:persistentIdentity rdf:resource="http://ibiocadsite.web.engr.illinois.edu/seq/""" + mpart.name + '"/>\n'
-                xml += """\t<sbol:displayId>""" + mpart.name + """</sbol:displayId>\n"""
-                xml += """\t<sbol:elements>""" + mpart.sequence + """</sbol:elements>\n"""
-                xml += """\t<sbol:encoding rdf:resource="http://www.chem.qmul.ac.uk/iubmb/misc/naseq.html"/>\n"""
-                xml += """</sbol:Sequence>\n"""
-                xml += """<sbol:ComponentDefinition rdf:about="http://ibiocadsite.web.engr.illinois.edu/""" + mpart.name + '">\n'
-                xml += """\t<sbol:persistentIdentity rdf:resource="http://ibiocadsite.web.engr.illinois.edu/""" + mpart.name + '"/>\n'
-                xml += """\t<sbol:displayId>""" + mpart.name + """</sbol:displayId>\n"""
-                xml += """\t<dcterms:title>""" + mpart.name + """</dcterms:title>\n"""
-                xml += """\t<dcterms:description>""" + mpart.description + """</dcterms:description>\n"""
-                xml += """\t<sbol:type rdf:resource="http://www.biopax.org/release/biopax-level3.owl#DnaRegion"/>\n"""
-                xml += '''\t<sbol:role rdf:resource="''' + roles_dict[part.type] + '"/>\n'
-                xml += """\t<sbol:sequence rdf:resource="http://ibiocadsite.web.engr.illinois.edu/seq/""" + mpart.name + '"/>\n'
-                xml += """</sbol:ComponentDefinition>\n"""
-        xml += """<sbol:Sequence rdf:about="http://ibiocadsite.web.engr.illinois.edu/seq/""" + part.name + '">\n'
-        xml += """\t<sbol:persistentIdentity rdf:resource="http://ibiocadsite.web.engr.illinois.edu/seq/""" + part.name + '"/>\n'
-        xml += """\t<sbol:displayId>""" + part.name + """</sbol:displayId>\n"""
-        xml += """\t<sbol:elements>""" + part.sequence + """</sbol:elements>\n"""
-        xml += """\t<sbol:encoding rdf:resource="http://www.chem.qmul.ac.uk/iubmb/misc/naseq.html"/>\n"""
-        xml += """</sbol:Sequence>\n"""
-        xml += """<sbol:ComponentDefinition rdf:about="http://ibiocadsite.web.engr.illinois.edu/""" + part.name + '">\n'
-        xml += """\t<sbol:persistentIdentity rdf:resource="http://ibiocadsite.web.engr.illinois.edu/""" + part.name + '"/>\n'
-        xml += """\t<sbol:displayId>""" + part.name + """</sbol:displayId>\n"""
-        xml += """\t<dcterms:title>""" + part.name + """</dcterms:title>\n"""
-        xml += """\t<dcterms:description>""" + part.description + """</dcterms:description>\n"""
-        xml += """\t<sbol:type rdf:resource="http://www.biopax.org/release/biopax-level3.owl#DnaRegion"/>\n"""
-        xml += '''\t<sbol:role rdf:resource="''' + roles_dict[part.type] + '"/>\n'
-        xml += """\t<sbol:sequence rdf:resource="http://ibiocadsite.web.engr.illinois.edu/seq/""" + part.name + '"/>\n'
-        xml += """</sbol:ComponentDefinition>\n"""
-    xml += """</rdf:RDF>"""
-    with open("constructs/plasmid_construct_%s.xml"%session_id,"w") as construct:
-        construct.write(xml)
-
+    import xml.etree.ElementTree as ET
+    rdf_root = ET.Element("rdf:RDF",attrib={"xmlns:pr":"http://partsregistry.org","xmlns:rdf":"http://www.w3.org/1999/02/22-rdf-syntax-ns#","xmlns:dcterms":"http://purl.org/dc/terms/","xmlns:prov":"http://www.w3.org/ns/prov#","xmlns:sbol":"http://sbols.org/v2#"})
+    xml = ET.ElementTree(element=rdf_root)
+    for unpacked_list in builds_list:
+        collection_uri = ""
+        for i in range(len(unpacked_list)-1):
+            collection_uri += unpacked_list[i].name
+            collection_uri += "-"
+        collection_uri += unpacked_list[-1].name
+        collection_node = ET.Element("sbol:Collection",attrib={"rdf:about":"http://ibiocad.igb.illinois.edu/collection/"+collection_uri})
+        for part in unpacked_list:
+            part_seq_node = ET.Element("sbol:Sequence",attrib={"rdf:about":"http://ibiocad.igb.illinois.edu/seq/"+part.name})
+            part_seq_node.append(ET.Element("sbol:persistentIdentity",attrib={"rdf:resource":"http://ibiocad.igb.illinois.edu/seq/"+part.name}))
+            seq_disp_id = ET.Element("sbol:displayId",attrib={})
+            seq_disp_id.text = part.name
+            part_seq_node.append(seq_disp_id)
+            sbol_element = ET.Element("sbol:elements",attrib={})
+            sbol_element.text = part.sequence
+            part_seq_node.append(sbol_element)
+            part_seq_node.append(ET.Element("sbol:encoding",attrib={"rdf:resource":"http://www.chem.qmul.ac.uk/iubmb/misc/naseq.html"}))
+            collection_node.append(part_seq_node)
+            part_node = ET.Element("sbol:ComponentDefinition",attrib={"rdf:about":"http://ibiocad.igb.illinois.edu/component/"+part.name})
+            part_node.append(ET.Element("sbol:persistentIdentity",attrib={"rdf:resource":"http://ibiocad.igb.illinois.edu/component/"+part.name}))
+            part_disp_id = ET.Element("sbol:displayId",attrib={})
+            part_disp_id.text = part.name
+            part_node.append(part_disp_id)
+            dcterms = ET.Element("dcterms:title",attrib={})
+            dcterms.text = part.name
+            part_node.append(dcterms)
+            dcterms_desc = ET.Element("dcterms:description",attrib={})
+            dcterms_desc.text = part.description
+            part_node.append(dcterms_desc)
+            part_node.append(ET.Element("sbol:type",attrib={"rdf:resource":"http://www.biopax.org/release/biopax-level3.owl#DnaRegion"}))
+            part_node.append(ET.Element("sbol:role",attrib={"rdf:resource":roles_dict[part.type]}))
+            part_node.append(ET.Element("sbol:sequence",attrib={"rdf:resource":"http://ibiocad.igb.illinois.edu/seq/"+part.name}))
+            collection_node.append(part_node)
+        rdf_root.append(collection_node)
+    xml.write("/var/www/ibiocad/iBioCAD/constructs/plasmid_construct_%s.xml"%session_id)
 def reverse_complement(sequence):
     rev_comp = ""
     Watson_Crick = {"A":"T","C":"G","T":"A","G":"C","a":"t","t":"a","c":"g","g":"c"}
@@ -353,8 +353,67 @@ class MainHandler(Handler):
             #sbol uses xml or the python module "sbol" can be used, see docs
         if self.request.POST.get("save_construct") == "save_construct":
             parts_list,session_id = self.update_part_list()
-            generateSBOLdoc(parts_list,session_id)
+            builds_list = builds(parts_list)
+            generateSBOLdoc(builds_list,session_id)
             self.redirect("/construct_download")
+        if self.request.POST.get("xml_input")!= b'' and self.request.POST.get("xml_input") is not None:
+            rev_roles_dict = {"http://identifiers.org/so/SO:0000167":"Promoter",
+                  "http://identifiers.org/so/SO:0000316":"CDS",
+                  "http://identifiers.org/so/SO:0000141":"Terminator",
+                  "http://identifiers.org/so/SO:0000139":"RBS",
+                  "http://identifiers.org/so/SO:0000296":"oriR",
+                  "http://identifiers.org/so/SO:0000101":"userDefined"
+                  }
+            parts_list,session_id = self.get_parts_list()
+            xml = self.request.POST.get("xml_input").file.read().decode("UTF-8")
+            import xml.etree.ElementTree as ET
+            tree = ET.parse(io.StringIO(xml))
+            root = tree.getroot()
+            builds_list = []
+            for unpacked_list_collection in root:
+                unpacked_list = []
+                components = []
+                sequences = []
+                for node in unpacked_list_collection:
+                    if node.tag == '''{http://sbols.org/v2#}ComponentDefinition''':
+                        components.append(node)
+                    if node.tag == '''{http://sbols.org/v2#}Sequence''':
+                        sequences.append(node)
+                for component,sequence in zip(components,sequences):
+                    if component[6].get('rdf:resource') == sequence[0].get('rdf:resource'):
+                        name = component[1].text
+                        type = rev_roles_dict[component[5].get('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}resource')]
+                        seq = sequence[2].text
+                        unpacked_list.append(Part(name,type,seq))
+                builds_list.append(unpacked_list)
+            if len(builds_list) == 1:
+                parts_list,session_id = self.update_part_list(updated_parts_list=builds_list[0])
+            else:
+                parts_list = []
+                for i in range(len(builds_list[0])):
+                    is_multipart = False
+                    current_part = builds_list[0][i].name
+                    for unpacked_list in builds_list:
+                        if unpacked_list[i].name != current_part:
+                            is_multipart = True
+                    if is_multipart:
+                        parts = []
+                        part_names = []
+                        for unpacked_list in builds_list:
+                            if unpacked_list[i].name not in part_names:
+                                parts.append(unpacked_list[i])
+                                part_names.append(unpacked_list[i].name)
+                        dynname = ""
+                        for i in range(len(parts)-1):
+                            dynname += parts[i].name
+                            dynname += "--"
+                        dynname += parts[-1].name
+                        parts_list.append(MultiPart(dynname,parts))
+                    else:
+                        parts_list.append(builds_list[0][i])
+                parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
+            self.redirect('/')
+
         if is_local:
             for record in SeqIO.parse("templates/pET-26b.fa","fasta"):
                 default_backbone = record

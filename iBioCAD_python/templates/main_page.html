@@ -196,14 +196,18 @@ function dragstart(e) {
         Institute for Genomic Biology
     </a>
 
-    <form method="post" id="bottom_form" style="display: inline-block">
+    <form method="post" id="bottom_form" style="display: inline-block" enctype="multipart/form-data">
         <button type="submit" id="export_construct" class="ui small black button" name="export_map" value="export_map" onclick="exportmap()">Export Map</button>
         <input type="text" class="export_dom" style="display: none;" name="export_dom" value="">
         <button type="submit" class="ui small black button" name="delete_map" value="TERMINATE">Delete Map</button>
         <div class="ui basic black button" ondragover="allowDrop(event)" ondrop="delSeq(event)" id="trash">Delete Sequences</div>
         <input type="text" id="deleted_seqs" style="display:none;" name="deleted_seqs" value="">
         <button formtarget="_blank" onsubmit="setTimeout(function () { window.location.reload(); }, 10)" type="submit" class="ui small black button" name="save_construct" value="save_construct" onclick="exportmap()">Save Construct</button>
-        <button type="submit" class="ui small black button" name="load_construct" value="load_construct">Load Construct</button>
+        <!--<button type="submit" class="ui small black button" name="load_construct" value="load_construct">Load Construct</button>-->
+        <label id="xmlinput" for="xml_file" class="ui small black button">
+                            Load Construct
+        </label>
+        <input type="file" class="ui small black button" onchange="this.form.submit()" id="xml_file" name="xml_input" style="display:none">
     </form>
     </div>
 {%if "BsaI_in_seq" in golden_gate_error%}

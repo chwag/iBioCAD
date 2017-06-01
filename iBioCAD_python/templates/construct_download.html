@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <script>
 	function file_download() {
-	document.getElementById('click-me').click();
+	document.getElementById('clickme').click();
 	}
 
     </script>
 </head>
 <body onload="file_download()">
-    <a href={{data_uri}} id="click-me" onclick="setTimeout(function () { window.open('', '_self', ''); window.close(); }, 10)" download="{{filename}}"></a>
+    <a href={{data_uri}} id="clickme" onclick="setTimeout(function () { window.open('', '_self', ''); window.close(); }, 15)" download="{{filename}}"></a>
+    <!--<a href="{{data_uri}} id="clickme" download="{{filename}}"></a>-->
 </body>
 </html>

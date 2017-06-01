@@ -44,10 +44,10 @@ def golden_gate_optimization(sequence_list, backbone_sequence):
     return None
 
 
-print(golden_gate_optimization(["ccctgtgcccctgtgcccctgtgccagggcctgtgc", "gtgcagcggtgcagcggtgcagcggtgcagcggtgcagggagcg",
-                                "atggatggatggatggatggatggatggatggatggatggatggatggagggatgg",
-                                "gactccatgactgactgactgactgactgactgactgactgactgactaggggact"],
-                               "ggggccatcgaagggggggggggggggggggggggggggggggggggggggggggggggggggggggatggaggggg"))
+#print(golden_gate_optimization(["ccctgtgcccctgtgcccctgtgccagggcctgtgc", "gtgcagcggtgcagcggtgcagcggtgcagcggtgcagggagcg",
+#                                "atggatggatggatggatggatggatggatggatggatggatggatggagggatgg",
+#                                "gactccatgactgactgactgactgactgactgactgactgactgactaggggact"],
+#                               "ggggccatcgaagggggggggggggggggggggggggggggggggggggggggggggggggggggggatggaggggg"))
 
 golden_gate_overhangs = [
                 "ccct","gctc","cggt","gtgc","agcg","ctgt","tgct","atgg","gact","ggac","tccg","ccag","cagc","gttg","cgaa","ccat"
@@ -95,3 +95,10 @@ if golden_gate_method == "scarless_assembly":
                     unpacked_list[0].primer_forward = "aaggtctca" + gg_opt[0] + unpacked_list[0].sequence[unpacked_list[0].sequence.find(gg_opt[0]):unpacked_list[0].sequence.find(gg_opt[0])+20]
                     unpacked_list[0].sequence = "aaggtctca" + unpacked_list[0].sequence[unpacked_list[0].sequence.find(gg_opt[0]):]
 '''
+
+import xml.etree.ElementTree as ET
+import io
+with open()
+tree = ET.parse(io.StringIO(xml))
+root = tree.getroot()
+print(root)
