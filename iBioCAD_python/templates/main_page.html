@@ -210,10 +210,18 @@ function dragstart(e) {
         <input type="file" class="ui small black button" onchange="this.form.submit()" id="xml_file" name="xml_input" style="display:none">
     </form>
     </div>
+    <form method="post" id="bsaIform" style="display: none;">
+        <input type="text" name="assembly_method" value="Type_II_Restriction_Enzyme">
+        <input type="text" name="remove_bsaI" value="yes">
+        <input type="text" class="export_dom" style="display: none;" name="export_dom" value="">
+    </form>
 {%if "BsaI_in_seq" in golden_gate_error%}
 <script>
-    alert("A sequence contains a BsaI recognition site! Error: {{golden_gate_error}}");
-    window.open('', '_self', ''); window.close();
+    exportmap()
+    if (confirm("One or more sequences contain BsaI recognition sites! Would you like to introduce silent mutations to scarlessly remove these sites?") == true) {
+        document.getElementById("bsaIform").submit()
+    }
+    <!--window.open('', '_self', ''); window.close();-->
 </script>
 {%elif golden_gate_error == "no_efficient_overhang_combinations"%}
 <script>

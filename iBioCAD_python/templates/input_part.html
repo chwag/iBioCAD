@@ -7,15 +7,17 @@
     function dynamicSwitch() {
         document.getElementById("static").style = "display: none"
         document.getElementById("dynamic").style = "display: block!important"
+        document.getElementById("library").style = "display: none"
     }
     function staticSwitch() {
         document.getElementById("static").style = "display: block"
         document.getElementById("dynamic").style = "display: none"
+        document.getElementById("library").style = "display: none"
     }
     function librarySwitch() {
         document.getElementById("static").style = "display: none"
         document.getElementById("dynamic").style = "display: none"
-        document.getElementById("library").style = "display: block!important"
+        document.getElementById("library").style = "display: block"
     }
 </script>
 <head>
@@ -94,22 +96,25 @@
     <div id="library" style="display:none">
         <div class="field">
             <label>Import From Library</label>
-            <select name="library_inputs" style="border-color:black;" multiple>
-                <option value="HXT5p|Promoter">HXT5p (Promoter)</option>
-                <option value="HXT7p|Promoter">HXT7p (Promoter)</option>
-                <option value="TEF1p|Promoter">TEF1p (Promoter)</option>
-                <option value="TPl1p|Promoter">TPl1p (Promoter)</option>
-                <option value="baFAS|CDS">baFAS (CDS)</option>
-                <option value="GFP|CDS">GFP (CDS)</option>
-                <option value="lldp|CDS">lldp (CDS)</option>
-                <option value="mel|CDS">meI (CDS)</option>
-                <option value="melpsd|CDS">melpsd (CDS)</option>
-                <option value="psd|CDS">psd (CDS)</option>
-                <option value="Trp1|CDS">Trp1 (CDS)</option>
-                <option value="HXT7t|Terminator">HXT7t (Terminator)</option>
-                <option value="PGKt|Terminator">PGKt (Terminator)</option>
-                <option value="TEF1t|Terminator">TEF1t (Terminator)</option>
-                <option value="TPl1t|Terminator">TPl1t (Terminator)</option>
+            <select name="library_inputs" style="border-color:black; height: 40vh;" multiple>
+                <option disabled style="color: black; opacity: initial; font-weight: bold">Promoters</option>
+                <option style="padding-left: 10%" value="HXT5p|Promoter">-HXT5p</option>
+                <option style="padding-left: 10%" value="HXT7p|Promoter">-HXT7p</option>
+                <option style="padding-left: 10%" value="TEF1p|Promoter">-TEF1p</option>
+                <option style="padding-left: 10%" value="TPI1p|Promoter">-TPI1p</option>
+                <option disabled style="color: black; opacity: initial; font-weight: bold">CDS</option>
+                <option style="padding-left: 10%" value="baFAS|CDS">-baFAS</option>
+                <option style="padding-left: 10%" value="GFP|CDS">-GFP</option>
+                <option style="padding-left: 10%" value="IIdp|CDS">-IIdp</option>
+                <option style="padding-left: 10%" value="meI|CDS">-meI</option>
+                <option style="padding-left: 10%" value="meIpsd|CDS">-meIpsd</option>
+                <option style="padding-left: 10%" value="psd|CDS">-psd</option>
+                <option style="padding-left: 10%" value="Trp1|CDS">-Trp1</option>
+                <option disabled style="color: black; opacity: initial; font-weight: bold">Terminators</option>
+                <option style="padding-left: 10%" value="HXT7t|Terminator">-HXT7t</option>
+                <option style="padding-left: 10%" value="PGKt|Terminator">-PGKt</option>
+                <option style="padding-left: 10%" value="TEF1t|Terminator">-TEF1t</option>
+                <option style="padding-left: 10%" value="TPI1t|Terminator">-TPI1t</option>
             </select>
         </div>
     </div>
