@@ -55,17 +55,34 @@
                 <th>
                     Sequence
                 </th>
+                <th>
+                    Tm
+                </th>
             </tr>
             </thead>
             <tbody>
+                {%for backbone_part in backbone_list%}
+                <tr>
+                    <td class="top aligned">Backbone,forward{{loop.index}}</td>
+                    <td class="top aligned">{{backbone_part[1]}}</td>
+                    <td class="top aligned">{{backbone_primers_tm[0]|round(1,'common')}}</td>
+                </tr>
+                <tr>
+                    <td class="top aligned">Backbone,reverse{{loop.index}}</td>
+                    <td class="top aligned">{{backbone_part[2]}}</td>
+                    <td class="top aligned">{{backbone_primers_tm[1]|round(1,'common')}}</td>
+                </tr>
+                {%endfor%}
                 {%for part in parts_list%}
                 <tr>
                     <td class="top aligned">{{part.name ~ ",forward"}}</td>
                     <td class="top aligned">{{part.primer_forward}}</td>
+                    <td class="top aligned">{{part.primer_forward_tm|round(1,'common')}}</td>
                 </tr>
                 <tr>
                     <td class="top aligned">{{part.name ~ ",reverse"}}</td>
                     <td class="top aligned">{{part.primer_reverse}}</td>
+                    <td class="top aligned">{{part.primer_reverse_tm|round(1,'common')}}</td>
                 </tr>
                 {%endfor%}
             </tbody>
@@ -139,16 +156,18 @@
             </tr>
             </thead>
             <tbody>
+                {%for backbone_part in backbone_list%}
                 <tr>
-                    <td class="top aligned">Backbone</td>
+                    <td class="top aligned">Backbone{{loop.index}}</td>
                     <td class="top aligned"></td>
-                    {%if new_backbone_sequence|length() > 500 %}
-                    <td class="top aligned">{{new_backbone_sequence[0:250] ~"..."~ new_backbone_sequence[-250:]}}</td>
+                    {%if backbone_part[0]|length() > 500 %}
+                    <td class="top aligned">{{backbone_part[0][0:250] ~"..."~ backbone_part[0][-250:]}}</td>
                     {%else%}
-                    <td class="top aligned">{{new_backbone_sequence}}</td>
+                    <td class="top aligned">{{backbone_part[0]}}</td>
                     {%endif%}
                     <td class="top aligned"></td>
                 </tr>
+                {%endfor%}
                 {%for part in parts_list%}
                 <tr>
                     <td class="top aligned">{{part.name}}</td>

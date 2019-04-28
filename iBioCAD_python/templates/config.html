@@ -28,6 +28,34 @@
                     {%endif%}<br><br>
                     <input type="file" name="backbone">
                 </div>
+                <div class="ui field raised segment container">
+                    <label>Primer Optimization</label><br>
+                    {%if assembly_config['Primer_optimization'] == 'no'%}
+                    <input type="radio" name="Primer_optimization" value="no" checked> Don't optimize the Tm of primers<br>
+                    <input type="radio" name="Primer_optimization" value="range"> Optimize the Tm of primers to be in a certain range ONLY<br>
+                    <input type="radio" name="Primer_optimization" value="near"> Optimize the Tm of primers to be <5 degrees of each other ONLY <br>
+                    <input type="radio" name="Primer_optimization" value="both"> Perform both of the above two optimizations <br><br>
+                    {%elif assembly_config['Primer_optimization'] == 'range'%}
+                    <input type="radio" name="Primer_optimization" value="no"> Don't optimize the Tm of primers<br>
+                    <input type="radio" name="Primer_optimization" value="range" checked> Optimize the Tm of primers to be in a certain range ONLY<br>
+                    <input type="radio" name="Primer_optimization" value="near"> Optimize the Tm of primers to be <5 degrees of each other ONLY <br>
+                    <input type="radio" name="Primer_optimization" value="both"> Perform both of the above two optimizations <br><br>
+                    {%elif assembly_config['Primer_optimization'] == 'near'%}
+                    <input type="radio" name="Primer_optimization" value="no"> Don't optimize the Tm of primers<br>
+                    <input type="radio" name="Primer_optimization" value="range"> Optimize the Tm of primers to be in a certain range ONLY<br>
+                    <input type="radio" name="Primer_optimization" value="near" checked> Optimize the Tm of primers to be <5 degrees of each other ONLY <br>
+                    <input type="radio" name="Primer_optimization" value="both"> Perform both of the above two optimizations <br><br>
+                    {%else%}
+                    <input type="radio" name="Primer_optimization" value="no"> Don't optimize the Tm of primers<br>
+                    <input type="radio" name="Primer_optimization" value="range"> Optimize the Tm of primers to be in a certain range ONLY<br>
+                    <input type="radio" name="Primer_optimization" value="near"> Optimize the Tm of primers to be <5 degrees of each other ONLY <br>
+                    <input type="radio" name="Primer_optimization" value="both" checked> Perform both of the above two optimizations <br><br>
+                    {%endif%}
+                    Primer Tm range:
+                    <input type="number" name="primer_tm0" value={{assembly_config['primer_tm'][0]}}><br>
+                    to
+                    <input type="number" name="primer_tm1" value={{assembly_config['primer_tm'][1]}}><br>
+                </div>
                 <button type="submit" class="ui blue button" name="save" value="save">Save</button>
                 <button type="submit" class="ui red button" name="cancel" value="cancel">Cancel</button>
             </div>
@@ -71,6 +99,7 @@
                 <a class="ui blue button" href="#LCR_category" style="display: inline-flex">LCR</a>
                 <a class="ui green button" href="#enzyme_category" style="display: inline-flex">Type II Restriction Enzyme</a>
                 <h1>Type II Restriction Enzyme Assembly</h1>
+                <div>
                 <label>Golden Gate assembly type</label><br>
                 {%if assembly_config['Golden_gate_method'] == "regular_assembly"%}
                 <input type="radio" name="Golden_gate_method" value="regular_assembly" checked> Regular assembly<br>
@@ -79,6 +108,7 @@
                 <input type="radio" name="Golden_gate_method" value="regular_assembly"> Regular assembly<br>
                 <input type="radio" name="Golden_gate_method" value="scarless_assembly" checked> Scarless assembly<br><br><br>
                 {%endif%}
+                </div>
                 <button type="submit" class="ui blue button" name="save" value="save">Save</button>
                 <button type="submit" class="ui red button" name="cancel" value="cancel">Cancel</button>
             </div>
