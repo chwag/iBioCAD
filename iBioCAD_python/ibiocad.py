@@ -74,7 +74,7 @@ def render_string(template,**params):
     return t.render(params)
 def render(template,**kw):
     print(render_string(template,**kw))
-#shouldn't be needed anymore but I'll keep it here for future use
+#Optionally render a welcome page
 #render("welcome_page.html",css=css,js=js)     #redirects to port 8080
 
 #Functions available throughout the framework
@@ -105,6 +105,7 @@ class Handler(webapp2.RequestHandler):
                 self.response.headers.add_header("Set-Cookie","sessionid="+session_id+"; Path=/")
             return parts_list,session_id
 
+        #Updates the parts_list by extracting information stored in the HTML DOM, which is modified as the user interacts with the web page
         def update_part_list(self,updated_parts_list=None):
             application = webapp2.get_app()
             if updated_parts_list==None:
@@ -158,6 +159,7 @@ try:
         primer_forward_tm = 0
         primer_reverse_tm = 0
 
+    #Object for combinatorial assembly; one MultiPart contains multiple parts at equivalent assembly junctions
     class MultiPart:
         def __init__(self,name,parts):
             self.name = name
@@ -165,27 +167,30 @@ try:
             self.type = "MultiPart"
         assembly_method = ""
 
-    #Creates a unique session_id for a user to be stored as a cookie. Don't get hungry.
+    #Creates a unique session_id for a user to be stored as a cookie
     def make_session_id():
-        id_nouns = {1:'Cheeseburger',2:'HotDog',3:'CrispyBacon',4:'StrawberryYogurt',5:'SourAppleLollipop',
-        6:'HotSauce',7:'MeatballSub',8:'ScrambledEggs',9:'CocoaPuffs',10:'ChocolateMousse',11:'BunchOfBananas',
-        12:'FishAndChips',13:'BeefPotRoast',14:'RedBeansAndRice',15:'FriedTofu',16:'EspressoShot',
-        17:'CaramelMacchiato',18:'ChocolateChipFrappuccino',19:'HawaiianPizza',20:'RoastedPistachios',
-        21:'ChickenTenders',22:'IchirakuRamen',23:'FunnelCake',24:'CottonCandy',25:'SkirtSteak',
-        26:'LambChop',27:'ClamChowder',28:'ChickenNoodle',29:'MatzoBall',30:'PotatoChips'
+        id_one = {1:'A',2:'B',3:'C',4:'D',5:'E',
+        6:'F',7:'G',8:'H',9:'I',10:'J',11:'K',
+        12:'L',13:'M',14:'N',15:'O',16:'P',
+        17:'Q',18:'R',19:'S',20:'T',
+        21:'U',22:'V',23:'W',24:'X',25:'Y',
+        26:'Z'
         }
-        id_verbs = {1:'Delicious',2:'Appetizing',3:'Delectable',4:'Delightful',5:'Distinctive',
-        6:'Enjoyable',7:'Enticing',8:'Exquisite',9:'Heavenly',10:'Luscious',11:'Piquant',
-        12:'Pleasant',13:'Rich',14:'Savory',15:'Spicy',16:'Sweet',17:'Tasty',18:'Tempting',
-        19:'Yummy',20:'Divine',21:'MouthWatering',22:'Palatable',23:'Sapid',24:'Scrumptious',25:'Tasteful'
-                    }
+        id_two = {1:'A',2:'B',3:'C',4:'D',5:'E',
+        6:'F',7:'G',8:'H',9:'I',10:'J',11:'K',
+        12:'L',13:'M',14:'N',15:'O',16:'P',
+        17:'Q',18:'R',19:'S',20:'T',
+        21:'U',22:'V',23:'W',24:'X',25:'Y',
+        26:'Z'
+        }
         from random import randrange
         import time
-        verb = id_verbs[randrange(1,26)]
-        noun = id_nouns[randrange(1,31)]
+        two = id_two[randrange(1,27)]
+        one = id_one[randrange(1,27)]
         number = str(randrange(0,999999999999))
-        return verb+noun+number
+        return one+two+number
 
+    #Takes the current build and assembles it into an XML file in the SBOL data format
     def generateSBOLdoc(builds_list,session_id):
         roles_dict = {"Promoter":"http://identifiers.org/so/SO:0000167",
                       "CDS":"http://identifiers.org/so/SO:0000316",
@@ -232,6 +237,7 @@ try:
                 collection_node.append(part_node)
             rdf_root.append(collection_node)
         xml.write("/var/www/ibiocad/iBioCAD/constructs/plasmid_construct_%s.xml"%session_id)
+
     def reverse_complement(sequence):
         rev_comp = ""
         Watson_Crick = {"A":"T","C":"G","T":"A","G":"C","a":"t","t":"a","c":"g","g":"c"}
@@ -239,6 +245,7 @@ try:
             rev_comp = Watson_Crick[base] + rev_comp
         return rev_comp
 
+    #Creates a bridge for LCR in the junction between a sequence and the next sequence in the build
     def create_LCR_bridge(sequence,next_sequence):
         bridge = ""
         current_bridge = ""
@@ -262,6 +269,8 @@ try:
                     best_tm = tm
         return bridge
 
+    #Creates a builds list from a parts list. Parts lists with MultiPart objects are "unzipped" into multiple builds lists. 
+    #For example, a parts list with "A", "B" or "b", and "C" will create a builds list with "A", "B", "C" parts list and "A", "b", "C" parts list
     def builds(parts_list):
         import copy
         builds_list = []
@@ -279,7 +288,7 @@ try:
             builds_list.append(build)
         return builds_list
 
-    #optimizes the overhangs used in Golden Gate assembly
+    #Optimizes the overhangs used in Golden Gate assembly
     def golden_gate_optimization(parts_list,backbone_sequence,gg_overhangs,bsaI_combs=[]):
         #seq_pairs = {0:"ccct",1:"gctc",2:"cggt",3:"gtgc",4:"agcg",5:"ctgt",6:"tgct",7:"atgg",8:"gact",9:"ggac",10:"tccg",11:"ccag",12:"cagc",13:"gttg",14:"cgaa",15:"ccat"}
         #golden_gate_overhangs = [
@@ -319,6 +328,7 @@ try:
         #if there are no possible combinations
         return None
 
+    #Given a sequence and an index where there is a BsaI site (as well as the type of the part), alter the sequence in such a way as to generate a silent mutation to remove the BsaI site
     def silent_mut(sequence,bsa_index,type):
         if type != "CDS":
             if sequence[bsa_index+1] == "g":
@@ -372,684 +382,275 @@ try:
             parts_list,session_id = self.get_parts_list()
             self.render("main_page.html",golden_gate_error="",css=css,js=js,parts_list=parts_list)
         def post(self):
-            #try:
-            #If "Delete construct" clicked, deletes existing cookie and assigns a new one
-            if self.request.POST.get("delete_map")=="TERMINATE":
-                self.response.delete_cookie("sessionid")
-                self.redirect("/")
-
-            parts_list,session_id = self.get_parts_list()
-            if self.request.POST.get("export_dom"):
-                parts_list,session_id = self.update_part_list()
-            if self.request.POST.get("file_input")!= b'' and self.request.POST.get("file_input") is not None:
-                parts_list,session_id = self.get_parts_list()
-                file = self.request.POST.get("file_input").file.read().decode("UTF-8")
-                if len(list(SeqIO.parse(io.StringIO(file),"fasta"))) > 1:
-                    application = webapp2.get_app()
-                    for record in SeqIO.parse(io.StringIO(file),"fasta"):
-                        parts_list.append(Part(record.name,"userDefined",record.seq))
-                    application.registry[session_id]['parts_list'] = parts_list
+            try:
+                #If "Delete construct" clicked, deletes existing cookie and assigns a new one
+                if self.request.POST.get("delete_map")=="TERMINATE":
+                    self.response.delete_cookie("sessionid")
                     self.redirect("/")
-                elif len(list(SeqIO.parse(io.StringIO(file),"fasta"))) == 1:
-                    application = webapp2.get_app()
-                    for record in SeqIO.parse(io.StringIO(file),"fasta"):
-                        name = record.name
-                        description = record.name
-                        sequence = record.seq
-                    application.registry[session_id]["file_input"] = [name,sequence,description]
-                    self.redirect("/inputpart")
-                else:
-                    name = file.split("\r\n")[0][1:]
-                    description = file.split("\r\n")[0][1:]
-                    sequence = file.split("\r\n")[1]
-                    session_id = self.get_parts_list()[1]
-                    app = webapp2.get_app()
-                    app.registry[session_id]["file_input"] = [name,sequence,description]
-                    self.redirect("/inputpart")
-            #If "Input New Part" clicked, opens input html page
-            if self.request.POST.get("input_part")=="goto_input_window":
-                self.redirect("/inputpart")
-            if self.request.POST.get("export_map")=="export_map":
-                parts_list,session_id = self.update_part_list()
-                #for future: data URIs
-                #data:[media_type](such as text/plain);charset=utf-8,<data>(encoded in octet characters)
-                #sbol uses xml or the python module "sbol" can be used, see docs
-            if self.request.POST.get("save_construct") == "save_construct":
-                parts_list,session_id = self.update_part_list()
-                builds_list = builds(parts_list)
-                generateSBOLdoc(builds_list,session_id)
-                self.redirect("/construct_download")
-            if self.request.POST.get("xml_input")!= b'' and self.request.POST.get("xml_input") is not None:
-                rev_roles_dict = {"http://identifiers.org/so/SO:0000167":"Promoter",
-                      "http://identifiers.org/so/SO:0000316":"CDS",
-                      "http://identifiers.org/so/SO:0000141":"Terminator",
-                      "http://identifiers.org/so/SO:0000139":"RBS",
-                      "http://identifiers.org/so/SO:0000296":"oriR",
-                      "http://identifiers.org/so/SO:0000101":"userDefined"
-                      }
+    
+    			#Extract information from the main page POST request. If some variables on the front or back end have not been initialized, initialize them.
+    			#Import file inputs if files are input from the main page
                 parts_list,session_id = self.get_parts_list()
-                xml = self.request.POST.get("xml_input").file.read().decode("UTF-8")
-                import xml.etree.ElementTree as ET
-                tree = ET.parse(io.StringIO(xml))
-                root = tree.getroot()
-                builds_list = []
-                for unpacked_list_collection in root:
-                    unpacked_list = []
-                    components = []
-                    sequences = []
-                    for node in unpacked_list_collection:
-                        if node.tag == '''{http://sbols.org/v2#}ComponentDefinition''':
-                            components.append(node)
-                        if node.tag == '''{http://sbols.org/v2#}Sequence''':
-                            sequences.append(node)
-                    for component,sequence in zip(components,sequences):
-                        if component[6].get('rdf:resource') == sequence[0].get('rdf:resource'):
-                            name = component[1].text
-                            type = rev_roles_dict[component[5].get('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}resource')]
-                            seq = sequence[2].text
-                            unpacked_list.append(Part(name,type,seq))
-                    builds_list.append(unpacked_list)
-                if len(builds_list) == 1:
-                    parts_list,session_id = self.update_part_list(updated_parts_list=builds_list[0])
-                else:
-                    parts_list = []
-                    for i in range(len(builds_list[0])):
-                        is_multipart = False
-                        current_part = builds_list[0][i].name
-                        for unpacked_list in builds_list:
-                            if unpacked_list[i].name != current_part:
-                                is_multipart = True
-                        if is_multipart:
-                            parts = []
-                            part_names = []
-                            for unpacked_list in builds_list:
-                                if unpacked_list[i].name not in part_names:
-                                    parts.append(unpacked_list[i])
-                                    part_names.append(unpacked_list[i].name)
-                            dynname = ""
-                            for i in range(len(parts)-1):
-                                dynname += parts[i].name
-                                dynname += "--"
-                            dynname += parts[-1].name
-                            parts_list.append(MultiPart(dynname,parts))
-                        else:
-                            parts_list.append(builds_list[0][i])
-                    parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
-                self.redirect('/')
+                if self.request.POST.get("export_dom"):
+                    parts_list,session_id = self.update_part_list()
+                if self.request.POST.get("file_input")!= b'' and self.request.POST.get("file_input") is not None:
+                    parts_list,session_id = self.get_parts_list()
+                    file = self.request.POST.get("file_input").file.read().decode("UTF-8")
+                    if len(list(SeqIO.parse(io.StringIO(file),"fasta"))) > 1:
+                        application = webapp2.get_app()
+                        for record in SeqIO.parse(io.StringIO(file),"fasta"):
+                            parts_list.append(Part(record.name,"userDefined",record.seq))
+                        application.registry[session_id]['parts_list'] = parts_list
+                        self.redirect("/")
+                    elif len(list(SeqIO.parse(io.StringIO(file),"fasta"))) == 1:
+                        application = webapp2.get_app()
+                        for record in SeqIO.parse(io.StringIO(file),"fasta"):
+                            name = record.name
+                            description = record.name
+                            sequence = record.seq
+                        application.registry[session_id]["file_input"] = [name,sequence,description]
+                        self.redirect("/inputpart")
+                    else:
+                        name = file.split("\r\n")[0][1:]
+                        description = file.split("\r\n")[0][1:]
+                        sequence = file.split("\r\n")[1]
+                        session_id = self.get_parts_list()[1]
+                        app = webapp2.get_app()
+                        app.registry[session_id]["file_input"] = [name,sequence,description]
+                        self.redirect("/inputpart")
+                #If "Input New Part" clicked, opens input html page
+                if self.request.POST.get("input_part")=="goto_input_window":
+                    self.redirect("/inputpart")
+                if self.request.POST.get("export_map")=="export_map":
+                    parts_list,session_id = self.update_part_list()
+                    #for future: data URIs
+                    #data:[media_type](such as text/plain);charset=utf-8,<data>(encoded in octet characters)
+                    #sbol uses xml or the python module "sbol" can be used, see docs
 
-            if is_local:
-                for record in SeqIO.parse("templates/pET-26b.fa","fasta"):
-                    default_backbone = record
-            else:
-                for record in SeqIO.parse("/var/www/ibiocad/iBioCAD/templates/pET-26b.fa","fasta"):
-                    default_backbone = record
-            default_config = {"backbone":default_backbone,"Golden_gate_method":"scarless_assembly","backbone_primers_tm":[mt.Tm_NN(default_backbone.seq[:40]),mt.Tm_NN(default_backbone[-40:].seq)],"backbone_primers":[default_backbone.seq[:40],default_backbone.seq[-40:]]
-                              ,"Primer_optimization":"both","primer_tm":[52,60]}
-            parts_list,session_id = self.get_parts_list()
-            application = webapp2.get_app()
-            if "assembly_config" not in application.registry.get(session_id).keys() or application.registry[session_id]["assembly_config"] is None:
-                application.registry[session_id]["assembly_config"] = default_config
-            assembly_config = application.registry.get(session_id)["assembly_config"]
-            backbone_sequence = assembly_config["backbone"].seq
-            new_backbone_sequence = backbone_sequence
-            backbone_primers_tm = assembly_config["backbone_primers_tm"]
-            backbone_primers = assembly_config["backbone_primers"]
-            application.registry[session_id]["new_backbone_sequence"] = new_backbone_sequence
-            golden_gate_method = assembly_config["Golden_gate_method"]
-            primer_optimization = assembly_config["Primer_optimization"]
-            primer_tm_range = assembly_config["primer_tm"]
-            #Run Yeast Assembly
-            if self.request.POST.get("assembly_method") == "Yeast_Assembly":
-                parts_list,session_id = self.update_part_list()
-                builds_list = builds(parts_list)
-                app = webapp2.get_app()
-                app.registry[session_id]['builds_list'] = builds_list
-                for unpacked_list in builds_list:
-                    for part in unpacked_list:
-                        part.assembly_method = "Yeast_Assembly"
-                    for i in range(len(unpacked_list)):
-                        if len(unpacked_list) < 2:
-                            self.redirect('/')
-                        if i == 0:
-                            if len(unpacked_list[i].sequence) >= 20:
-                                unpacked_list[i].primer_forward = backbone_sequence[-40:] + unpacked_list[i].sequence[:20]
+                #If "Save Construct" clicked, download the XML document per generateSBOLdoc()
+                if self.request.POST.get("save_construct") == "save_construct":
+                    parts_list,session_id = self.update_part_list()
+                    builds_list = builds(parts_list)
+                    generateSBOLdoc(builds_list,session_id)
+                    self.redirect("/construct_download")
+
+                #Read in an XML document generated from "Save Construct"
+                if self.request.POST.get("xml_input")!= b'' and self.request.POST.get("xml_input") is not None:
+                    rev_roles_dict = {"http://identifiers.org/so/SO:0000167":"Promoter",
+                          "http://identifiers.org/so/SO:0000316":"CDS",
+                          "http://identifiers.org/so/SO:0000141":"Terminator",
+                          "http://identifiers.org/so/SO:0000139":"RBS",
+                          "http://identifiers.org/so/SO:0000296":"oriR",
+                          "http://identifiers.org/so/SO:0000101":"userDefined"
+                          }
+                    parts_list,session_id = self.get_parts_list()
+                    xml = self.request.POST.get("xml_input").file.read().decode("UTF-8")
+                    import xml.etree.ElementTree as ET
+                    tree = ET.parse(io.StringIO(xml))
+                    root = tree.getroot()
+                    builds_list = []
+                    for unpacked_list_collection in root:
+                        unpacked_list = []
+                        components = []
+                        sequences = []
+                        for node in unpacked_list_collection:
+                            if node.tag == '''{http://sbols.org/v2#}ComponentDefinition''':
+                                components.append(node)
+                            if node.tag == '''{http://sbols.org/v2#}Sequence''':
+                                sequences.append(node)
+                        for component,sequence in zip(components,sequences):
+                            if component[6].get('rdf:resource') == sequence[0].get('rdf:resource'):
+                                name = component[1].text
+                                type = rev_roles_dict[component[5].get('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}resource')]
+                                seq = sequence[2].text
+                                unpacked_list.append(Part(name,type,seq))
+                        builds_list.append(unpacked_list)
+                    if len(builds_list) == 1:
+                        parts_list,session_id = self.update_part_list(updated_parts_list=builds_list[0])
+                    else:
+                        parts_list = []
+                        for i in range(len(builds_list[0])):
+                            is_multipart = False
+                            current_part = builds_list[0][i].name
+                            for unpacked_list in builds_list:
+                                if unpacked_list[i].name != current_part:
+                                    is_multipart = True
+                            if is_multipart:
+                                parts = []
+                                part_names = []
+                                for unpacked_list in builds_list:
+                                    if unpacked_list[i].name not in part_names:
+                                        parts.append(unpacked_list[i])
+                                        part_names.append(unpacked_list[i].name)
+                                dynname = ""
+                                for i in range(len(parts)-1):
+                                    dynname += parts[i].name
+                                    dynname += "--"
+                                dynname += parts[-1].name
+                                parts_list.append(MultiPart(dynname,parts))
                             else:
-                                unpacked_list[i].primer_forward = backbone_sequence[-40:] + unpacked_list[i].sequence
-                            if len(unpacked_list[i].sequence) >= 20 and len(unpacked_list[i+1].sequence) >= 40:
-                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-20:] + unpacked_list[i+1].sequence[:40])
-                            elif len(unpacked_list[i].sequence) >= 20 and len(unpacked_list[i+1].sequence) < 40:
-                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-20:] + unpacked_list[i+1].sequence)
-                            elif len(unpacked_list[i].sequence) < 20 and len(unpacked_list[i+1].sequence) >= 40:
-                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence[:40])
-                            else:
-                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence)
-                        elif i == len(unpacked_list)-1:
-                            if len(unpacked_list[i].sequence) >= 20:
-                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-20:] + backbone_sequence[:40])
-                            else:
-                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + backbone_sequence[:40])
-                            if len(unpacked_list[i].sequence) >= 20 and len(unpacked_list[i-1].sequence) >= 40:
-                                unpacked_list[i].primer_forward = unpacked_list[i-1].sequence[-40:] + unpacked_list[i].sequence[:20]
-                            elif len(unpacked_list[i].sequence) >= 20 and len(unpacked_list[i-1].sequence) < 40:
-                                unpacked_list[i].primer_forward = unpacked_list[i-1].sequence + unpacked_list[i].sequence[:20]
-                            elif len(unpacked_list[i].sequence) < 20 and len(unpacked_list[i-1].sequence) >= 40:
-                                unpacked_list[i].primer_forward = unpacked_list[i-1].sequence[-40:] + unpacked_list[i].sequence
-                            else:
-                                unpacked_list[i].primer_forward = unpacked_list[i-1].sequence + unpacked_list[i].sequence
-                        else:
-                            if len(unpacked_list[i].sequence) >= 20 and len(unpacked_list[i-1].sequence) >= 40:
-                                unpacked_list[i].primer_forward = unpacked_list[i-1].sequence[-40:] + unpacked_list[i].sequence[:20]
-                            elif len(unpacked_list[i].sequence) >= 20 and len(unpacked_list[i-1].sequence) < 40:
-                                unpacked_list[i].primer_forward = unpacked_list[i-1].sequence + unpacked_list[i].sequence[:20]
-                            elif len(unpacked_list[i].sequence) < 20 and len(unpacked_list[i-1].sequence) >= 40:
-                                unpacked_list[i].primer_forward = unpacked_list[i-1].sequence[-40:] + unpacked_list[i].sequence
-                            else:
-                                unpacked_list[i].primer_forward = unpacked_list[i-1].sequence + unpacked_list[i].sequence
-                            if len(unpacked_list[i].sequence) >= 20 and len(unpacked_list[i+1].sequence) >= 40:
-                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-20:] + unpacked_list[i+1].sequence[:40])
-                            elif len(unpacked_list[i].sequence) >= 20 and len(unpacked_list[i+1].sequence) < 40:
-                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-20:] + unpacked_list[i+1].sequence)
-                            elif len(unpacked_list[i].sequence) < 20 and len(unpacked_list[i+1].sequence) >= 40:
-                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence[:40])
-                            else:
-                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence)
-                    #parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
-                    for i in range(len(unpacked_list)):
-                        if len(unpacked_list) < 2:
-                            self.redirect('/')
-                        if i == 0:
-                            if len(unpacked_list[i+1].sequence) >= 40:
-                                unpacked_list[i].sequence = backbone_sequence[-40:] + unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:40]
-                            else:
-                                unpacked_list[i].sequence = backbone_sequence[-40:] + unpacked_list[i].sequence + unpacked_list[i+1].sequence
-                        elif i == len(unpacked_list)-1:
-                            if len(unpacked_list[i-1].sequence) >= 40:
-                                unpacked_list[i].sequence = unpacked_list[i-1].sequence[-80:-40] + unpacked_list[i].sequence + backbone_sequence[:40]
-                            else:
-                                unpacked_list[i].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence + backbone_sequence[:40]
-                        else:
-                            if len(unpacked_list[i-1].sequence) >= 40 and len(unpacked_list[i+1].sequence) >= 40:
-                                unpacked_list[i].sequence = unpacked_list[i-1].sequence[-80:-40] + unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:40]
-                            elif len(unpacked_list[i-1].sequence) >= 40:
-                                unpacked_list[i].sequence = unpacked_list[i-1].sequence[-80:-40] + unpacked_list[i].sequence + unpacked_list[i+1].sequence
-                            elif len(unpacked_list[i+1].sequence) >= 40:
-                                unpacked_list[i].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:40]
-                            else:
-                                unpacked_list[i].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence + unpacked_list[i+1].sequence
-                if primer_optimization == "range":
-                    for unpacked_list in builds_list:
-                        for part in unpacked_list:
-                            if mt.Tm_NN(part.primer_forward) < primer_tm_range[0]:
-                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                            else:
-                                for i in range(len(part.primer_forward),15,-1):
-                                    if mt.Tm_NN(part.primer_forward[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_forward[:i]) <= primer_tm_range[1]:
-                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
-                                        part.primer_forward = part.primer_forward[:i]
-                                        break
-                                    else:
-                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                            if mt.Tm_NN(part.primer_reverse) < primer_tm_range[0]:
-                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                            else:
-                                for i in range(len(part.primer_reverse),15,-1):
-                                    if mt.Tm_NN(part.primer_reverse[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_reverse[:i]) <= primer_tm_range[1]:
-                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:i])
-                                        part.primer_reverse = part.primer_reverse[:i]
-                                        break
-                                    else:
-                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                    breakit=False
-                    for x in range(40,15,-1):
-                        for z in range(40,15,-1):
-                            if mt.Tm_NN(new_backbone_sequence[:x])>=primer_tm_range[0] and mt.Tm_NN(new_backbone_sequence[:x])<=primer_tm_range[1] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]) >= primer_tm_range[0] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]) <= primer_tm_range[1]:
-                                backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-40:])[:z]]
-                                backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z])]
-                                breakit=True
-                            if breakit:
-                                break
-                        if breakit:
-                            break
-                    if not breakit:
-                        backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
-                        backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:40]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:]))]
-                elif primer_optimization == "near":
-                    for unpacked_list in builds_list:
-                        for part in unpacked_list:
-                            breakit=False
-                            for i in range(len(part.primer_forward),15,-1):
-                                for j in range(len(part.primer_reverse),15,-1):
-                                    if abs(mt.Tm_NN(part.primer_forward[:i])-mt.Tm_NN(part.primer_reverse[:j])) <=5:
-                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
-                                        part.primer_forward = part.primer_forward[:i]
-                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:j])
-                                        part.primer_reverse = part.primer_reverse[:j]
-                                        breakit=True
-                                    if breakit:
-                                        break
-                                if breakit:
-                                    break
-                            if not breakit:
-                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                    breakit=False
-                    for x in range(40,15,-1):
-                        for z in range(40,15,-1):
-                            if abs(mt.Tm_NN(new_backbone_sequence[:x])-mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]))<=5:
-                                backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-40:])[:z]]
-                                backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z])]
-                                breakit=True
-                            if breakit:
-                                break
-                        if breakit:
-                            break
-                    if not breakit:
-                        backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
-                        backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:40]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:]))]
-                elif primer_optimization == "both":
-                    for unpacked_list in builds_list:
-                        for part in unpacked_list:
-                            if mt.Tm_NN(part.primer_forward) < primer_tm_range[0] and mt.Tm_NN(part.primer_reverse) < primer_tm_range[0]:
-                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                            elif mt.Tm_NN(part.primer_forward) < primer_tm_range[0] and mt.Tm_NN(part.primer_reverse) >= primer_tm_range[0]:
-                                breakit=False
-                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                                for j in range(len(part.primer_reverse),15,-1):
-                                    if abs(part.primer_forward_tm-mt.Tm_NN(part.primer_reverse[:j])) <=5:
-                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:j])
-                                        part.primer_reverse = part.primer_reverse[:j]
-                                        breakit=True
-                                if not breakit:
-                                    part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                            elif mt.Tm_NN(part.primer_reverse) < primer_tm_range[0] and mt.Tm_NN(part.primer_forward) >= primer_tm_range[0]:
-                                breakit=False
-                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                                for i in range(len(part.primer_forward),15,-1):
-                                    if abs(part.primer_reverse_tm-mt.Tm_NN(part.primer_forward[:i])) <=5:
-                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
-                                        part.primer_forward = part.primer_forward[:i]
-                                        breakit=True
-                                if not breakit:
-                                    part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                            else:
-                                breakit=False
-                                for i in range(len(part.primer_forward),15,-1):
-                                    for j in range(len(part.primer_reverse),15,-1):
-                                        if abs(mt.Tm_NN(part.primer_forward[:i])-mt.Tm_NN(part.primer_reverse[:j]))<=5 and mt.Tm_NN(part.primer_forward[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_forward[:i]) <= primer_tm_range[1] and mt.Tm_NN(part.primer_reverse[:j]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_reverse[:j]) <= primer_tm_range[1]:
-                                            part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
-                                            part.primer_forward = part.primer_forward[:i]
-                                            part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:j])
-                                            part.primer_reverse = part.primer_reverse[:j]
-                                            breakit=True
-                                        if breakit:
-                                            break
-                                    if breakit:
-                                        break
-                                if not breakit:
-                                    part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                                    part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                    breakit=False
-                    for x in range(40,15,-1):
-                        for z in range(40,15,-1):
-                            if abs(mt.Tm_NN(new_backbone_sequence[:x])-mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]))<=5 and mt.Tm_NN(new_backbone_sequence[:x])>=primer_tm_range[0] and mt.Tm_NN(new_backbone_sequence[:x])<=primer_tm_range[1] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]) >= primer_tm_range[0] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]) <= primer_tm_range[1]:
-                                backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-40:])[:z]]
-                                backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z])]
-                                breakit=True
-                            if breakit:
-                                break
-                        if breakit:
-                            break
-                    if not breakit:
-                        backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
-                        backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:40]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:]))]
+                                parts_list.append(builds_list[0][i])
+                        parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
+                    self.redirect('/')
+    			
+    			#Initialize default config settings
+                if is_local:
+                    for record in SeqIO.parse("templates/pET-26b.fa","fasta"):
+                        default_backbone = record
                 else:
-                    for unpacked_list in builds_list:
-                        for part in unpacked_list:
-                            part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                            part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                    backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
-                    backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:40]),reverse_complement(new_backbone_sequence[-40:])]
-                app.registry[session_id]["backbone_primers"] = backbone_primers
-                app.registry[session_id]["backbone_primers_tm"] = backbone_primers_tm
-                parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
-                app.registry[session_id]['builds_list'] = builds_list
-                self.redirect("/assembly")
-            #Run Gibson Assembly
-            if self.request.POST.get("assembly_method") == "Gibson_Assembly":
-                parts_list,session_id = self.update_part_list()
-                builds_list = builds(parts_list)
-                app = webapp2.get_app()
-                app.registry[session_id]['builds_list'] = builds_list
-                for unpacked_list in builds_list:
-                    for part in unpacked_list:
-                        part.assembly_method = "Gibson_Assembly"
-                    for i in range(len(unpacked_list)):
-                        if len(unpacked_list) < 2:
-                            self.redirect('/')
-                        if i == 0:
-                            if len(unpacked_list[i].sequence) >= 25:
-                                unpacked_list[i].primer_forward = backbone_sequence[-25:] + unpacked_list[i].sequence[:25]
-                            else:
-                                unpacked_list[i].primer_forward = backbone_sequence[-25:] + unpacked_list[i].sequence
-                            if len(unpacked_list[i].sequence) >= 25 and len(unpacked_list[i+1].sequence) >= 25:
-                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-25:] + unpacked_list[i+1].sequence[:25])
-                            elif len(unpacked_list[i].sequence) >= 25 and len(unpacked_list[i+1].sequence) < 25:
-                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-25:] + unpacked_list[i+1].sequence)
-                            elif len(unpacked_list[i].sequence) < 25 and len(unpacked_list[i+1].sequence) >= 25:
-                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence[:25])
-                            else:
-                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence)
-                        elif i == len(unpacked_list)-1:
-                            if len(unpacked_list[i].sequence) >= 25:
-                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-25:] + backbone_sequence[:25])
-                            else:
-                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + backbone_sequence[:25])
-                            if len(unpacked_list[i].sequence) >= 25 and len(unpacked_list[i-1].sequence) >= 25:
-                                unpacked_list[i].primer_forward = unpacked_list[i-1].sequence[-25:] + unpacked_list[i].sequence[:25]
-                            elif len(unpacked_list[i].sequence) >= 25 and len(unpacked_list[i-1].sequence) < 25:
-                                unpacked_list[i].primer_forward = unpacked_list[i-1].sequence + unpacked_list[i].sequence[:25]
-                            elif len(unpacked_list[i].sequence) < 25 and len(unpacked_list[i-1].sequence) >= 25:
-                                unpacked_list[i].primer_forward = unpacked_list[i-1].sequence[-25:] + unpacked_list[i].sequence
-                            else:
-                                unpacked_list[i].primer_forward = unpacked_list[i-1].sequence + unpacked_list[i].sequence
-                        else:
-                            if len(unpacked_list[i].sequence) >= 25 and len(unpacked_list[i-1].sequence) >= 25:
-                                unpacked_list[i].primer_forward = unpacked_list[i-1].sequence[-25:] + unpacked_list[i].sequence[:25]
-                            elif len(unpacked_list[i].sequence) >= 25 and len(unpacked_list[i-1].sequence) < 25:
-                                unpacked_list[i].primer_forward = unpacked_list[i-1].sequence + unpacked_list[i].sequence[:25]
-                            elif len(unpacked_list[i].sequence) < 25 and len(unpacked_list[i-1].sequence) >= 25:
-                                unpacked_list[i].primer_forward = unpacked_list[i-1].sequence[-25:] + unpacked_list[i].sequence
-                            else:
-                                unpacked_list[i].primer_forward = unpacked_list[i-1].sequence + unpacked_list[i].sequence
-                            if len(unpacked_list[i].sequence) >= 25 and len(unpacked_list[i+1].sequence) >= 25:
-                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-25:] + unpacked_list[i+1].sequence[:25])
-                            elif len(unpacked_list[i].sequence) >= 25 and len(unpacked_list[i+1].sequence) < 25:
-                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-25:] + unpacked_list[i+1].sequence)
-                            elif len(unpacked_list[i].sequence) < 25 and len(unpacked_list[i+1].sequence) >= 25:
-                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence[:25])
-                            else:
-                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence)
-                    #parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
-                    for i in range(len(unpacked_list)):
-                        if len(unpacked_list) < 2:
-                            self.redirect('/')
-                        if i == 0:
-                            if len(unpacked_list[i+1].sequence) >= 25:
-                                unpacked_list[i].sequence = backbone_sequence[-25:] + unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:25]
-                            else:
-                                unpacked_list[i].sequence = backbone_sequence[-25:] + unpacked_list[i].sequence + unpacked_list[i+1].sequence
-                        elif i == len(unpacked_list)-1:
-                            if len(unpacked_list[i-1].sequence) >= 25:
-                                unpacked_list[i].sequence = unpacked_list[i-1].sequence[-50:-25] + unpacked_list[i].sequence + backbone_sequence[:25]
-                            else:
-                                unpacked_list[i].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence + backbone_sequence[:25]
-                        else:
-                            if len(unpacked_list[i-1].sequence) >= 25 and len(unpacked_list[i+1].sequence) >= 25:
-                                unpacked_list[i].sequence = unpacked_list[i-1].sequence[-50:-25] + unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:25]
-                            elif len(unpacked_list[i-1].sequence) >= 25:
-                                unpacked_list[i].sequence = unpacked_list[i-1].sequence[-50:-25] + unpacked_list[i].sequence + unpacked_list[i+1].sequence
-                            elif len(unpacked_list[i+1].sequence) >= 25:
-                                unpacked_list[i].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:25]
-                            else:
-                                unpacked_list[i].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence + unpacked_list[i+1].sequence
-                if primer_optimization == "range":
-                    for unpacked_list in builds_list:
-                        for part in unpacked_list:
-                            if mt.Tm_NN(part.primer_forward) < primer_tm_range[0]:
-                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                            else:
-                                for i in range(len(part.primer_forward),15,-1):
-                                    if mt.Tm_NN(part.primer_forward[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_forward[:i]) <= primer_tm_range[1]:
-                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
-                                        part.primer_forward = part.primer_forward[:i]
-                                        break
-                                    else:
-                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                            if mt.Tm_NN(part.primer_reverse) < primer_tm_range[0]:
-                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                            else:
-                                for i in range(len(part.primer_reverse),15,-1):
-                                    if mt.Tm_NN(part.primer_reverse[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_reverse[:i]) <= primer_tm_range[1]:
-                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:i])
-                                        part.primer_reverse = part.primer_reverse[:i]
-                                        break
-                                    else:
-                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                    breakit=False
-                    for x in range(40,15,-1):
-                        for z in range(40,15,-1):
-                            if mt.Tm_NN(new_backbone_sequence[:x])>=primer_tm_range[0] and mt.Tm_NN(new_backbone_sequence[:x])<=primer_tm_range[1] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]) >= primer_tm_range[0] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]) <= primer_tm_range[1]:
-                                backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-40:])[:z]]
-                                backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z])]
-                                breakit=True
-                            if breakit:
-                                break
-                        if breakit:
-                            break
-                    if not breakit:
-                        backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
-                        backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:40]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:]))]
-                elif primer_optimization == "near":
-                    for unpacked_list in builds_list:
-                        for part in unpacked_list:
-                            breakit=False
-                            for i in range(len(part.primer_forward),15,-1):
-                                for j in range(len(part.primer_reverse),15,-1):
-                                    if abs(mt.Tm_NN(part.primer_forward[:i])-mt.Tm_NN(part.primer_reverse[:j])) <=5:
-                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
-                                        part.primer_forward = part.primer_forward[:i]
-                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:j])
-                                        part.primer_reverse = part.primer_reverse[:j]
-                                        breakit=True
-                                    if breakit:
-                                        break
-                                if breakit:
-                                    break
-                            if not breakit:
-                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                    breakit=False
-                    for x in range(40,15,-1):
-                        for z in range(40,15,-1):
-                            if abs(mt.Tm_NN(new_backbone_sequence[:x])-mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]))<=5:
-                                backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-40:])[:z]]
-                                backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z])]
-                                breakit=True
-                            if breakit:
-                                break
-                        if breakit:
-                            break
-                    if not breakit:
-                        backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
-                        backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:40]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:]))]
-                elif primer_optimization == "both":
-                    for unpacked_list in builds_list:
-                        for part in unpacked_list:
-                            if mt.Tm_NN(part.primer_forward) < primer_tm_range[0] and mt.Tm_NN(part.primer_reverse) < primer_tm_range[0]:
-                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                            elif mt.Tm_NN(part.primer_forward) < primer_tm_range[0] and mt.Tm_NN(part.primer_reverse) >= primer_tm_range[0]:
-                                breakit=False
-                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                                for j in range(len(part.primer_reverse),15,-1):
-                                    if abs(part.primer_forward_tm-mt.Tm_NN(part.primer_reverse[:j])) <=5:
-                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:j])
-                                        part.primer_reverse = part.primer_reverse[:j]
-                                        breakit=True
-                                if not breakit:
-                                    part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                            elif mt.Tm_NN(part.primer_reverse) < primer_tm_range[0] and mt.Tm_NN(part.primer_forward) >= primer_tm_range[0]:
-                                breakit=False
-                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                                for i in range(len(part.primer_forward),15,-1):
-                                    if abs(part.primer_reverse_tm-mt.Tm_NN(part.primer_forward[:i])) <=5:
-                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
-                                        part.primer_forward = part.primer_forward[:i]
-                                        breakit=True
-                                if not breakit:
-                                    part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                            else:
-                                breakit=False
-                                for i in range(len(part.primer_forward),15,-1):
-                                    for j in range(len(part.primer_reverse),15,-1):
-                                        if abs(mt.Tm_NN(part.primer_forward[:i])-mt.Tm_NN(part.primer_reverse[:j]))<=5 and mt.Tm_NN(part.primer_forward[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_forward[:i]) <= primer_tm_range[1] and mt.Tm_NN(part.primer_reverse[:j]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_reverse[:j]) <= primer_tm_range[1]:
-                                            part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
-                                            part.primer_forward = part.primer_forward[:i]
-                                            part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:j])
-                                            part.primer_reverse = part.primer_reverse[:j]
-                                            breakit=True
-                                        if breakit:
-                                            break
-                                    if breakit:
-                                        break
-                                if not breakit:
-                                    part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                                    part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                    breakit=False
-                    for x in range(40,15,-1):
-                        for z in range(40,15,-1):
-                            if abs(mt.Tm_NN(new_backbone_sequence[:x])-mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]))<=5 and mt.Tm_NN(new_backbone_sequence[:x])>=primer_tm_range[0] and mt.Tm_NN(new_backbone_sequence[:x])<=primer_tm_range[1] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]) >= primer_tm_range[0] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]) <= primer_tm_range[1]:
-                                backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-40:])[:z]]
-                                backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z])]
-                                breakit=True
-                            if breakit:
-                                break
-                        if breakit:
-                            break
-                    if not breakit:
-                        backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
-                        backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:40]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:]))]
-                else:
-                    for unpacked_list in builds_list:
-                        for part in unpacked_list:
-                            part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                            part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                    backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
-                    backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:40]),reverse_complement(new_backbone_sequence[-40:])]
-                app.registry[session_id]["backbone_primers"] = backbone_primers
-                app.registry[session_id]["backbone_primers_tm"] = backbone_primers_tm
-                parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
-                app.registry[session_id]['builds_list'] = builds_list
-                self.redirect("/assembly")
-            if self.request.POST.get("assembly_method") == "LCR":
-                parts_list,session_id = self.update_part_list()
-                builds_list = builds(parts_list)
+                    for record in SeqIO.parse("/var/www/ibiocad/iBioCAD/templates/pET-26b.fa","fasta"):
+                        default_backbone = record
+                default_config = {"backbone":default_backbone,"Golden_gate_method":"scarless_assembly","backbone_primers_tm":[mt.Tm_NN(default_backbone.seq[:40]),mt.Tm_NN(default_backbone[-40:].seq)],"backbone_primers":[default_backbone.seq[:40],default_backbone.seq[-40:]]
+                                  ,"Primer_optimization":"both","primer_tm":[52,60]}
+
+                #Read in variables from the config page
+                parts_list,session_id = self.get_parts_list()
                 application = webapp2.get_app()
-                application.registry[session_id]['builds_list'] = builds_list
-                for unpacked_list in builds_list:
-                    for part in unpacked_list:
-                        part.assembly_method = "LCR"
-                    for i in range(len(unpacked_list)):
-                        if len(unpacked_list)<2:
-                            self.redirect('/')
-                        if i == (len(unpacked_list)-1):
-                            unpacked_list[i].bridge_with_next_part = create_LCR_bridge(unpacked_list[i].sequence,backbone_sequence[:200])
-                        if i == 0:
-                            unpacked_list[i].bridge_with_previous_part = create_LCR_bridge(backbone_sequence[-200:],unpacked_list[i].sequence)
-                        if i < (len(unpacked_list)-1):
-                            unpacked_list[i].bridge_with_next_part = create_LCR_bridge(unpacked_list[i].sequence,unpacked_list[i+1].sequence)
-                if primer_optimization == "range":
+                if "assembly_config" not in application.registry.get(session_id).keys() or application.registry[session_id]["assembly_config"] is None:
+                    application.registry[session_id]["assembly_config"] = default_config
+                assembly_config = application.registry.get(session_id)["assembly_config"]
+                backbone_sequence = assembly_config["backbone"].seq
+                new_backbone_sequence = backbone_sequence
+                backbone_primers_tm = assembly_config["backbone_primers_tm"]
+                backbone_primers = assembly_config["backbone_primers"]
+                application.registry[session_id]["new_backbone_sequence"] = new_backbone_sequence
+                golden_gate_method = assembly_config["Golden_gate_method"]
+                primer_optimization = assembly_config["Primer_optimization"]
+                primer_tm_range = assembly_config["primer_tm"]
+
+                #If "Assemble" is clicked, run computation based on the chosen Assembly Method
+
+                #Run Yeast Assembly
+                #Based on the homology distance, generates primer sequences and modifies the DNA sequences and backbone sequences
+                if self.request.POST.get("assembly_method") == "Yeast_Assembly":
+                    parts_list,session_id = self.update_part_list()
+                    builds_list = builds(parts_list)
+                    app = webapp2.get_app()
+                    app.registry[session_id]['builds_list'] = builds_list
+                    new_backbone_sequence = backbone_sequence
+                    new_backbone_primers = [new_backbone_sequence[:40],new_backbone_sequence[-40:]]
                     for unpacked_list in builds_list:
+                        backbone_list = []
                         for part in unpacked_list:
-                            if mt.Tm_NN(part.primer_forward) < primer_tm_range[0]:
-                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                            part.assembly_method = "Yeast_Assembly"
+                        for i in range(len(unpacked_list)):
+                            if len(unpacked_list) < 2:
+                                self.redirect('/')
+                            if i == 0:
+                                if len(unpacked_list[i].sequence) >= 20:
+                                    unpacked_list[i].primer_forward = backbone_sequence[-40:] + unpacked_list[i].sequence[:20]
+                                else:
+                                    unpacked_list[i].primer_forward = backbone_sequence[-40:] + unpacked_list[i].sequence
+                                if len(unpacked_list[i].sequence) >= 20 and len(unpacked_list[i+1].sequence) >= 40:
+                                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-20:] + unpacked_list[i+1].sequence[:40])
+                                elif len(unpacked_list[i].sequence) >= 20 and len(unpacked_list[i+1].sequence) < 40:
+                                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-20:] + unpacked_list[i+1].sequence)
+                                elif len(unpacked_list[i].sequence) < 20 and len(unpacked_list[i+1].sequence) >= 40:
+                                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence[:40])
+                                else:
+                                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence)
+                            elif i == len(unpacked_list)-1:
+                                if len(unpacked_list[i].sequence) >= 20:
+                                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-20:] + backbone_sequence[:40])
+                                else:
+                                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + backbone_sequence[:40])
+                                if len(unpacked_list[i].sequence) >= 20 and len(unpacked_list[i-1].sequence) >= 40:
+                                    unpacked_list[i].primer_forward = unpacked_list[i-1].sequence[-40:] + unpacked_list[i].sequence[:20]
+                                elif len(unpacked_list[i].sequence) >= 20 and len(unpacked_list[i-1].sequence) < 40:
+                                    unpacked_list[i].primer_forward = unpacked_list[i-1].sequence + unpacked_list[i].sequence[:20]
+                                elif len(unpacked_list[i].sequence) < 20 and len(unpacked_list[i-1].sequence) >= 40:
+                                    unpacked_list[i].primer_forward = unpacked_list[i-1].sequence[-40:] + unpacked_list[i].sequence
+                                else:
+                                    unpacked_list[i].primer_forward = unpacked_list[i-1].sequence + unpacked_list[i].sequence
                             else:
-                                for i in range(len(part.primer_forward),15,-1):
-                                    if mt.Tm_NN(part.primer_forward[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_forward[:i]) <= primer_tm_range[1]:
-                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
-                                        part.primer_forward = part.primer_forward[:i]
-                                        break
-                                    else:
-                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                            if mt.Tm_NN(part.primer_reverse) < primer_tm_range[0]:
-                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                                if len(unpacked_list[i].sequence) >= 20 and len(unpacked_list[i-1].sequence) >= 40:
+                                    unpacked_list[i].primer_forward = unpacked_list[i-1].sequence[-40:] + unpacked_list[i].sequence[:20]
+                                elif len(unpacked_list[i].sequence) >= 20 and len(unpacked_list[i-1].sequence) < 40:
+                                    unpacked_list[i].primer_forward = unpacked_list[i-1].sequence + unpacked_list[i].sequence[:20]
+                                elif len(unpacked_list[i].sequence) < 20 and len(unpacked_list[i-1].sequence) >= 40:
+                                    unpacked_list[i].primer_forward = unpacked_list[i-1].sequence[-40:] + unpacked_list[i].sequence
+                                else:
+                                    unpacked_list[i].primer_forward = unpacked_list[i-1].sequence + unpacked_list[i].sequence
+                                if len(unpacked_list[i].sequence) >= 20 and len(unpacked_list[i+1].sequence) >= 40:
+                                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-20:] + unpacked_list[i+1].sequence[:40])
+                                elif len(unpacked_list[i].sequence) >= 20 and len(unpacked_list[i+1].sequence) < 40:
+                                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-20:] + unpacked_list[i+1].sequence)
+                                elif len(unpacked_list[i].sequence) < 20 and len(unpacked_list[i+1].sequence) >= 40:
+                                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence[:40])
+                                else:
+                                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence)
+                        #parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
+                        new_backbone_sequence = unpacked_list[-1].sequence[-40:] + new_backbone_sequence + unpacked_list[0].sequence[:40]
+                        new_backbone_primers = [new_backbone_sequence[:40],new_backbone_sequence[-40:]]
+                        backbone_list.append([new_backbone_sequence,new_backbone_primers[0],new_backbone_primers[1]])
+                        for i in range(len(unpacked_list)):
+                            if len(unpacked_list) < 2:
+                                self.redirect('/')
+                            if i == 0:
+                                if len(unpacked_list[i+1].sequence) >= 40:
+                                    unpacked_list[i].sequence = backbone_sequence[-40:] + unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:40]
+                                else:
+                                    unpacked_list[i].sequence = backbone_sequence[-40:] + unpacked_list[i].sequence + unpacked_list[i+1].sequence
+                            elif i == len(unpacked_list)-1:
+                                if len(unpacked_list[i-1].sequence) >= 40:
+                                    unpacked_list[i].sequence = unpacked_list[i-1].sequence[-80:-40] + unpacked_list[i].sequence + backbone_sequence[:40]
+                                else:
+                                    unpacked_list[i].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence + backbone_sequence[:40]
                             else:
-                                for i in range(len(part.primer_reverse),15,-1):
-                                    if mt.Tm_NN(part.primer_reverse[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_reverse[:i]) <= primer_tm_range[1]:
-                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:i])
-                                        part.primer_reverse = part.primer_reverse[:i]
-                                        break
-                                    else:
-                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                    breakit=False
-                    for x in range(40,15,-1):
-                        for z in range(40,15,-1):
-                            if mt.Tm_NN(new_backbone_sequence[:x])>=primer_tm_range[0] and mt.Tm_NN(new_backbone_sequence[:x])<=primer_tm_range[1] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]) >= primer_tm_range[0] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]) <= primer_tm_range[1]:
-                                backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-40:])[:z]]
-                                backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z])]
-                                breakit=True
-                            if breakit:
-                                break
-                        if breakit:
-                            break
-                    if not breakit:
-                        backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
-                        backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:40]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:]))]
-                elif primer_optimization == "near":
-                    for unpacked_list in builds_list:
-                        for part in unpacked_list:
-                            breakit=False
-                            for i in range(len(part.primer_forward),15,-1):
-                                for j in range(len(part.primer_reverse),15,-1):
-                                    if abs(mt.Tm_NN(part.primer_forward[:i])-mt.Tm_NN(part.primer_reverse[:j])) <=5:
-                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
-                                        part.primer_forward = part.primer_forward[:i]
-                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:j])
-                                        part.primer_reverse = part.primer_reverse[:j]
-                                        breakit=True
-                                    if breakit:
-                                        break
+                                if len(unpacked_list[i-1].sequence) >= 40 and len(unpacked_list[i+1].sequence) >= 40:
+                                    unpacked_list[i].sequence = unpacked_list[i-1].sequence[-80:-40] + unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:40]
+                                elif len(unpacked_list[i-1].sequence) >= 40:
+                                    unpacked_list[i].sequence = unpacked_list[i-1].sequence[-80:-40] + unpacked_list[i].sequence + unpacked_list[i+1].sequence
+                                elif len(unpacked_list[i+1].sequence) >= 40:
+                                    unpacked_list[i].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:40]
+                                else:
+                                    unpacked_list[i].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence + unpacked_list[i+1].sequence
+
+                    #Optimize primer Tm based on config settings
+                    if primer_optimization == "range":
+                        for unpacked_list in builds_list:
+                            for part in unpacked_list:
+                                if mt.Tm_NN(part.primer_forward) < primer_tm_range[0]:
+                                    part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                else:
+                                    for i in range(len(part.primer_forward),15,-1):
+                                        if mt.Tm_NN(part.primer_forward[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_forward[:i]) <= primer_tm_range[1]:
+                                            part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
+                                            part.primer_forward = part.primer_forward[:i]
+                                            break
+                                        else:
+                                            part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                if mt.Tm_NN(part.primer_reverse) < primer_tm_range[0]:
+                                    part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                                else:
+                                    for i in range(len(part.primer_reverse),15,-1):
+                                        if mt.Tm_NN(part.primer_reverse[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_reverse[:i]) <= primer_tm_range[1]:
+                                            part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:i])
+                                            part.primer_reverse = part.primer_reverse[:i]
+                                            break
+                                        else:
+                                            part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                        breakit=False
+                        for x in range(40,15,-1):
+                            for z in range(40,15,-1):
+                                if mt.Tm_NN(new_backbone_sequence[:x])>=primer_tm_range[0] and mt.Tm_NN(new_backbone_sequence[:x])<=primer_tm_range[1] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]) >= primer_tm_range[0] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]) <= primer_tm_range[1]:
+                                    backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-40:])[:z]]
+                                    backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z])]
+                                    breakit=True
                                 if breakit:
                                     break
-                            if not breakit:
-                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                    breakit=False
-                    for x in range(40,15,-1):
-                        for z in range(40,15,-1):
-                            if abs(mt.Tm_NN(new_backbone_sequence[:x])-mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]))<=5:
-                                backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-40:])[:z]]
-                                backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z])]
-                                breakit=True
                             if breakit:
                                 break
-                        if breakit:
-                            break
-                    if not breakit:
-                        backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
-                        backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:40]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:]))]
-                elif primer_optimization == "both":
-                    for unpacked_list in builds_list:
-                        for part in unpacked_list:
-                            if mt.Tm_NN(part.primer_forward) < primer_tm_range[0] and mt.Tm_NN(part.primer_reverse) < primer_tm_range[0]:
-                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                            elif mt.Tm_NN(part.primer_forward) < primer_tm_range[0] and mt.Tm_NN(part.primer_reverse) >= primer_tm_range[0]:
-                                breakit=False
-                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                                for j in range(len(part.primer_reverse),15,-1):
-                                    if abs(part.primer_forward_tm-mt.Tm_NN(part.primer_reverse[:j])) <=5:
-                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:j])
-                                        part.primer_reverse = part.primer_reverse[:j]
-                                        breakit=True
-                                if not breakit:
-                                    part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                            elif mt.Tm_NN(part.primer_reverse) < primer_tm_range[0] and mt.Tm_NN(part.primer_forward) >= primer_tm_range[0]:
-                                breakit=False
-                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                                for i in range(len(part.primer_forward),15,-1):
-                                    if abs(part.primer_reverse_tm-mt.Tm_NN(part.primer_forward[:i])) <=5:
-                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
-                                        part.primer_forward = part.primer_forward[:i]
-                                        breakit=True
-                                if not breakit:
-                                    part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                            else:
+                        if not breakit:
+                            backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
+                            backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:40]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:]))]
+                    elif primer_optimization == "near":
+                        for unpacked_list in builds_list:
+                            for part in unpacked_list:
                                 breakit=False
                                 for i in range(len(part.primer_forward),15,-1):
                                     for j in range(len(part.primer_reverse),15,-1):
-                                        if abs(mt.Tm_NN(part.primer_forward[:i])-mt.Tm_NN(part.primer_reverse[:j]))<=5 and mt.Tm_NN(part.primer_forward[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_forward[:i]) <= primer_tm_range[1] and mt.Tm_NN(part.primer_reverse[:j]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_reverse[:j]) <= primer_tm_range[1]:
+                                        if abs(mt.Tm_NN(part.primer_forward[:i])-mt.Tm_NN(part.primer_reverse[:j])) <=5:
                                             part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
                                             part.primer_forward = part.primer_forward[:i]
                                             part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:j])
@@ -1062,432 +663,968 @@ try:
                                 if not breakit:
                                     part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
                                     part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                    breakit=False
-                    for x in range(40,15,-1):
-                        for z in range(40,15,-1):
-                            if abs(mt.Tm_NN(new_backbone_sequence[:x])-mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]))<=5 and mt.Tm_NN(new_backbone_sequence[:x])>=primer_tm_range[0] and mt.Tm_NN(new_backbone_sequence[:x])<=primer_tm_range[1] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]) >= primer_tm_range[0] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]) <= primer_tm_range[1]:
-                                backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-40:])[:z]]
-                                backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z])]
-                                breakit=True
-                            if breakit:
-                                break
-                        if breakit:
-                            break
-                    if not breakit:
-                        backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
-                        backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:40]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:]))]
-                else:
-                    for unpacked_list in builds_list:
-                        for part in unpacked_list:
-                            part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                            part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                    backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
-                    backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:40]),reverse_complement(new_backbone_sequence[-40:])]
-                application.registry[session_id]["backbone_primers"] = backbone_primers
-                application.registry[session_id]["backbone_primers_tm"] = backbone_primers_tm
-                parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
-                application.registry[session_id]['builds_list'] = builds_list
-                self.redirect("/assembly")
-            golden_gate_error=""
-            if self.request.POST.get("assembly_method") == "Type_II_Restriction_Enzyme":
-                remove_bsaI = self.request.POST.get("remove_bsaI")
-                parts_list,session_id = self.update_part_list()
-                builds_list = builds(parts_list)
-                app = webapp2.get_app()
-                app.registry[session_id]['builds_list'] = builds_list
-                new_backbone_sequence = backbone_sequence
-                new_backbone_primers = [new_backbone_sequence[:40],new_backbone_sequence[-40:]]
-                if golden_gate_method == "regular_assembly":
-                    new_builds_list = []
-                    for unpacked_list in builds_list:
-                        new_unpacked_list = []
-                        contains_bsaI = False
-                        for part in unpacked_list:
-                            part.assembly_method = "Type_II_Restriction_Enzyme"
-                            part.sequence = part.sequence.lower()
-                            if "ggtctc" in part.sequence or "gagacc" in part.sequence or "ggtctc" in backbone_sequence or "gagacc" in backbone_sequence:
-                                golden_gate_error = "BsaI_in_seq" +"|"+ part.name
-                                contains_bsaI = True
-                        if remove_bsaI == "yes":
-                            def gg_reg_opt(unpacked_list,gg_overhangs):
-                                golden_gate_overhangs = gg_overhangs
-                                golden_gate_error = ""
-                                reserved_overhangs = []
-                                bsaI_removal_map = {}
-                                bsaI_removal_combs = []
-                                bsaI_removal_key = []
-                                for part in unpacked_list:
-                                    part.sequence = part.sequence.lower()
-                                    bsa_index = []
-                                    ii=0
-                                    while len(bsa_index) != (part.sequence.count("ggtctc")+part.sequence.count("gagacc")) and ii<10*len(unpacked_list):
-                                        if "ggtctc" in part.sequence and "gagacc" not in part.sequence:
-                                            if bsa_index == []:
-                                                bsa_index.append(part.sequence.find("ggtctc"))
-                                            else:
-                                                bsa_index.append(part.sequence.find("ggtctc",bsa_index[-1]+1))
-                                        elif "gagacc" in part.sequence and "ggtctc" not in part.sequence:
-                                            if bsa_index == []:
-                                                bsa_index.append(part.sequence.find("gagacc"))
-                                            else:
-                                                bsa_index.append(part.sequence.find("gagacc",bsa_index[-1]+1))
-                                        elif "ggtctc" in part.sequence and "gagacc" in part.sequence:
-                                            if bsa_index == []:
-                                                bsa_index.append(min(part.sequence.find("ggtctc"),part.sequence.find("gagacc")))
-                                            else:
-                                                bsa_index.append(min(part.sequence.find("ggtctc",bsa_index[-1]+1),part.sequence.find("gagacc",bsa_index[-1]+1)))
-                                        ii+=1
-                                    if "ggtctc" in part.sequence or "gagacc" in part.sequence:
-                                        for xx in bsa_index:
-                                            bsaI_removal_key.append(part)
-                                        for i in range(len(bsa_index)):
-                                            bsaI_removal_combs.append([])
-                                            for overhang in golden_gate_overhangs:
-                                                if overhang in part.sequence[bsa_index[i]-30:bsa_index[i]+37] and ((part.sequence[bsa_index[i]-30:bsa_index[i]+37].find(overhang)+bsa_index[i]-30)<(bsa_index[i]-3) or (part.sequence[bsa_index[i]-30:bsa_index[i]+37].find(overhang)+bsa_index[i]-30)>=(bsa_index[i]+6)):
-                                                    bsaI_removal_combs[-1].append(overhang)
-                                combs = []
-                                for x in itertools.product(*bsaI_removal_combs):
-                                    combs.append(x)
-                                for comb in combs:
-                                    if len(comb) == len(set(comb)):
-                                        reserved_overhangs = comb
-                                if reserved_overhangs != []:
-                                    for i in range(len(bsaI_removal_key)):
-                                        if bsaI_removal_key[i].name in bsaI_removal_map.keys():
-                                           bsaI_removal_map[bsaI_removal_key[i].name].append(reserved_overhangs[i])
-                                        else:
-                                            bsaI_removal_map[bsaI_removal_key[i].name] = [reserved_overhangs[i]]
-                                else:
-                                    golden_gate_error = "no_efficient_overhang_combinations"
-                                return reserved_overhangs,bsaI_removal_map,golden_gate_error
-                            breakit = False
-                            for i in range(10,51):
-                                for j in range(5):
-                                    with open('/var/www/ibiocad/iBioCAD/overhangsets/setsof%s.csv'%i,'r') as f:
-                                        reader = csv.reader(f, delimiter=",")
-                                        temp = list(reader)[1:]
-                                    gg_overhangs = []
-                                    for x in range(i):
-                                        gg_overhangs.append(temp[j][x].lower())
-                                    if gg_reg_opt(unpacked_list,gg_overhangs)[2] == "" and (len(gg_reg_opt(unpacked_list,gg_overhangs)[0])+len(unpacked_list))<i :
-                                        breakit = True
-                                        reserved_overhangs,bsaI_removal_map,golden_gate_error = gg_reg_opt(unpacked_list,gg_overhangs)
-                                    if breakit:
-                                        break
+                        breakit=False
+                        for x in range(40,15,-1):
+                            for z in range(40,15,-1):
+                                if abs(mt.Tm_NN(new_backbone_sequence[:x])-mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]))<=5:
+                                    backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-40:])[:z]]
+                                    backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z])]
+                                    breakit=True
                                 if breakit:
                                     break
-                        else:
-                            bsaI_removal_map = {}
-                            oh_num = max(len(unpacked_list),10)
-                            with open('/var/www/ibiocad/iBioCAD/overhangsets/setsof%s.csv'%oh_num,'r') as f:
-                                reader = csv.reader(f, delimiter=",")
-                                temp = list(reader)[1:]
-                            gg_overhangs = []
-                            for x in range(oh_num):
-                                gg_overhangs.append(temp[0][x].lower())
-                        golden_gate_overhangs = gg_overhangs
-                        for i in range(len(unpacked_list)):
-                            if golden_gate_error != "" or remove_bsaI == "no":
+                            if breakit:
                                 break
-                            if remove_bsaI == "yes":
-                                usable_overhangs = list(set(golden_gate_overhangs)-set(reserved_overhangs))
-                            else:
-                                usable_overhangs = list(set(golden_gate_overhangs))
-                            if len(unpacked_list) > len(usable_overhangs):
+                        if not breakit:
+                            backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
+                            backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:40]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:]))]
+                    elif primer_optimization == "both":
+                        for unpacked_list in builds_list:
+                            for part in unpacked_list:
+                                if mt.Tm_NN(part.primer_forward) < primer_tm_range[0] and mt.Tm_NN(part.primer_reverse) < primer_tm_range[0]:
+                                    part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                    part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                                elif mt.Tm_NN(part.primer_forward) < primer_tm_range[0] and mt.Tm_NN(part.primer_reverse) >= primer_tm_range[0]:
+                                    breakit=False
+                                    part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                    for j in range(len(part.primer_reverse),15,-1):
+                                        if abs(part.primer_forward_tm-mt.Tm_NN(part.primer_reverse[:j])) <=5:
+                                            part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:j])
+                                            part.primer_reverse = part.primer_reverse[:j]
+                                            breakit=True
+                                    if not breakit:
+                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                                elif mt.Tm_NN(part.primer_reverse) < primer_tm_range[0] and mt.Tm_NN(part.primer_forward) >= primer_tm_range[0]:
+                                    breakit=False
+                                    part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                                    for i in range(len(part.primer_forward),15,-1):
+                                        if abs(part.primer_reverse_tm-mt.Tm_NN(part.primer_forward[:i])) <=5:
+                                            part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
+                                            part.primer_forward = part.primer_forward[:i]
+                                            breakit=True
+                                    if not breakit:
+                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                else:
+                                    breakit=False
+                                    for i in range(len(part.primer_forward),15,-1):
+                                        for j in range(len(part.primer_reverse),15,-1):
+                                            if abs(mt.Tm_NN(part.primer_forward[:i])-mt.Tm_NN(part.primer_reverse[:j]))<=5 and mt.Tm_NN(part.primer_forward[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_forward[:i]) <= primer_tm_range[1] and mt.Tm_NN(part.primer_reverse[:j]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_reverse[:j]) <= primer_tm_range[1]:
+                                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
+                                                part.primer_forward = part.primer_forward[:i]
+                                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:j])
+                                                part.primer_reverse = part.primer_reverse[:j]
+                                                breakit=True
+                                            if breakit:
+                                                break
+                                        if breakit:
+                                            break
+                                    if not breakit:
+                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                        breakit=False
+                        for x in range(40,15,-1):
+                            for z in range(40,15,-1):
+                                if abs(mt.Tm_NN(new_backbone_sequence[:x])-mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]))<=5 and mt.Tm_NN(new_backbone_sequence[:x])>=primer_tm_range[0] and mt.Tm_NN(new_backbone_sequence[:x])<=primer_tm_range[1] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]) >= primer_tm_range[0] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]) <= primer_tm_range[1]:
+                                    backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-40:])[:z]]
+                                    backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z])]
+                                    breakit=True
+                                if breakit:
+                                    break
+                            if breakit:
                                 break
-                            unpacked_list[i].primer_forward = "aaggtctca" + usable_overhangs[i] + unpacked_list[i].sequence[:20]
-                            unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-20:] + usable_overhangs[i+1] + "agagaccaa")
-                            unpacked_list[i].sequence = "aaggtctca" + usable_overhangs[i] + unpacked_list[i].sequence + usable_overhangs[i+1] + "agagaccaa"
-                            if unpacked_list[i].name in bsaI_removal_map.keys():
-                                bsa_index = []
-                                iii=0
-                                while len(bsa_index) != (unpacked_list[i].sequence.count("ggtctc")+unpacked_list[i].sequence.count("gagacc"))-2 and iii<10*len(unpacked_list):
-                                    if "ggtctc" in unpacked_list[i].sequence[13:] and "gagacc" not in unpacked_list[i].sequence[:len(unpacked_list[i].sequence)-13]:
-                                        if bsa_index == []:
-                                            bsa_index.append(unpacked_list[i].sequence.find("ggtctc",13))
-                                        else:
-                                            bsa_index.append(unpacked_list[i].sequence.find("ggtctc",bsa_index[-1]+1))
-                                    elif "gagacc" in unpacked_list[i].sequence[:len(unpacked_list[i].sequence)-13] and "ggtctc" not in unpacked_list[i].sequence[13:]:
-                                        if bsa_index == []:
-                                            bsa_index.append(unpacked_list[i].sequence.find("gagacc",0,len(unpacked_list[i].sequence)-13))
-                                        else:
-                                            bsa_index.append(unpacked_list[i].sequence.find("gagacc",bsa_index[-1]+1))
-                                    elif "ggtctc" in unpacked_list[i].sequence[13:] and "gagacc" in unpacked_list[i].sequence[:len(unpacked_list[i].sequence)-13]:
-                                        if bsa_index == []:
-                                            bsa_index.append(min(unpacked_list[i].sequence.find("ggtctc",13),unpacked_list[i].sequence.find("gagacc",0,len(unpacked_list[i].sequence)-13)))
-                                        else:
-                                            bsa_index.append(min(unpacked_list[i].sequence.find("ggtctc",bsa_index[-1]+1),unpacked_list[i].sequence.find("gagacc",bsa_index[-1]+1)))
-                                    iii+=1
-                                for x in range(len(bsaI_removal_map[unpacked_list[i].name])):
-                                    overhang = bsaI_removal_map[unpacked_list[i].name][x]
-                                    if x == 0:
-                                        if bsa_index[x]-30 < 0:
-                                            if overhang in unpacked_list[i].sequence[0:bsa_index[x]]:
-                                                overhang_index = unpacked_list[i].sequence.find(overhang,0,bsa_index[x])
-                                                new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"a",unpacked_list[i].type,unpacked_list[i].sequence[:overhang_index]+overhang+"agagaccaa"))
-                                                new_unpacked_list[-1].primer_forward = unpacked_list[i].primer_forward
-                                                new_unpacked_list[-1].primer_reverse = reverse_complement(unpacked_list[i].sequence[overhang_index-20:overhang_index]+overhang+"agagaccaa")
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                                if len(bsa_index)>x+1:
-                                                    for q in range(x+1,len(bsa_index)):
-                                                        bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
-                                                new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"b",unpacked_list[i].type,"aaggtctca"+silent_mut(unpacked_list[i].sequence[overhang_index:],bsa_index[x]-overhang_index,unpacked_list[i].type)))
-                                                new_unpacked_list[-1].primer_forward = "aaggtctca" + silent_mut(unpacked_list[i].sequence[overhang_index:],bsa_index[x]-overhang_index,unpacked_list[i].type)[:24]
-                                                new_unpacked_list[-1].primer_reverse = unpacked_list[i].primer_reverse
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                            elif overhang in unpacked_list[i].sequence[bsa_index[x]+6:bsa_index[x]+37]:
-                                                overhang_index = unpacked_list[i].sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
-                                                new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"a",unpacked_list[i].type,silent_mut(unpacked_list[i].sequence[:overhang_index],bsa_index[x],unpacked_list[i].type)+overhang+"agagaccaa"))
-                                                new_unpacked_list[-1].primer_forward = unpacked_list[i].primer_forward
-                                                new_unpacked_list[-1].primer_reverse = reverse_complement(silent_mut(unpacked_list[i].sequence[:overhang_index],bsa_index[x],unpacked_list[i].type)[-20:]+overhang+"agagaccaa")
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                                if len(bsa_index)>x+1:
-                                                    for q in range(x+1,len(bsa_index)):
-                                                        bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
-                                                new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"b",unpacked_list[i].type,"aaggtctca"+unpacked_list[i].sequence[overhang_index:]))
-                                                new_unpacked_list[-1].primer_forward = "aaggtctca" + unpacked_list[i].sequence[overhang_index:overhang_index+24]
-                                                new_unpacked_list[-1].primer_reverse = unpacked_list[i].primer_reverse
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                            else:
-                                                pass
-                                        else:
-                                            if overhang in unpacked_list[i].sequence[bsa_index[x]-30:bsa_index[x]]:
-                                                overhang_index = unpacked_list[i].sequence.find(overhang,bsa_index[x]-30,bsa_index[x])
-                                                new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"a",unpacked_list[i].type,unpacked_list[i].sequence[:overhang_index]+overhang+"agagaccaa"))
-                                                new_unpacked_list[-1].primer_forward = unpacked_list[i].primer_forward
-                                                new_unpacked_list[-1].primer_reverse = reverse_complement(unpacked_list[i].sequence[overhang_index-20:overhang_index]+overhang+"agagaccaa")
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                                if len(bsa_index)>x+1:
-                                                    for q in range(x+1,len(bsa_index)):
-                                                        bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
-                                                new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"b",unpacked_list[i].type,"aaggtctca"+silent_mut(unpacked_list[i].sequence[overhang_index:],bsa_index[x]-overhang_index,unpacked_list[i].type)))
-                                                new_unpacked_list[-1].primer_forward = "aaggtctca" + silent_mut(unpacked_list[i].sequence[overhang_index:],bsa_index[x]-overhang_index,unpacked_list[i].type)[:24]
-                                                new_unpacked_list[-1].primer_reverse = unpacked_list[i].primer_reverse
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                            elif overhang in unpacked_list[i].sequence[bsa_index[x]+6:bsa_index[x]+37]:
-                                                overhang_index = unpacked_list[i].sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
-                                                new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"a",unpacked_list[i].type,silent_mut(unpacked_list[i].sequence[:overhang_index],bsa_index[x],unpacked_list[i].type)+overhang+"agagaccaa"))
-                                                new_unpacked_list[-1].primer_forward = unpacked_list[i].primer_forward
-                                                new_unpacked_list[-1].primer_reverse = reverse_complement(silent_mut(unpacked_list[i].sequence[:overhang_index],bsa_index[x],unpacked_list[i].type)[-20:]+overhang+"agagaccaa")
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                                if len(bsa_index)>x+1:
-                                                    for q in range(x+1,len(bsa_index)):
-                                                        bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
-                                                new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"b",unpacked_list[i].type,"aaggtctca"+unpacked_list[i].sequence[overhang_index:]))
-                                                new_unpacked_list[-1].primer_forward = "aaggtctca" + unpacked_list[i].sequence[overhang_index:overhang_index+24]
-                                                new_unpacked_list[-1].primer_reverse = unpacked_list[i].primer_reverse
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                            else:
-                                                pass
-                                    else:
-                                        if bsa_index[x]-30 < 0:
-                                            if overhang in new_unpacked_list[-1].sequence[0:bsa_index[x]]:
-                                                overhang_index = new_unpacked_list[-1].sequence.find(overhang,0,bsa_index[x])
-                                                new_unpacked_list.append(Part(new_unpacked_list[-1].name+"-"+str(x+1)+"a",new_unpacked_list[-1].type,new_unpacked_list[-1].sequence[:overhang_index]+overhang+"agagaccaa"))
-                                                new_unpacked_list[-1].primer_forward = new_unpacked_list[-2].primer_forward
-                                                new_unpacked_list[-1].primer_reverse = reverse_complement(new_unpacked_list[-2].sequence[overhang_index-20:overhang_index]+overhang+"agagaccaa")
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                                if len(bsa_index)>x+1:
-                                                    for q in range(x+1,len(bsa_index)):
-                                                        bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
-                                                new_unpacked_list.append(Part(new_unpacked_list[-2].name+"-"+str(x+1)+"b",new_unpacked_list[-2].type,"aaggtctca"+silent_mut(new_unpacked_list[-2].sequence[overhang_index:],bsa_index[x]-overhang_index,new_unpacked_list[-2].type)))
-                                                new_unpacked_list[-1].primer_forward = "aaggtctca" + silent_mut(new_unpacked_list[-3].sequence[overhang_index:],bsa_index[x]-overhang_index,new_unpacked_list[-3].type)[:24]
-                                                new_unpacked_list[-1].primer_reverse = new_unpacked_list[-3].primer_reverse
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                                del new_unpacked_list[-3]
-                                            elif overhang in new_unpacked_list[-1].sequence[bsa_index[x]+6:bsa_index[x]+37]:
-                                                overhang_index = new_unpacked_list[-1].sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
-                                                new_unpacked_list.append(Part(new_unpacked_list[-1].name+"-"+str(x+1)+"a",new_unpacked_list[-1].type,silent_mut(new_unpacked_list[-1].sequence[:overhang_index],bsa_index[x],new_unpacked_list[-1].type)+overhang+"agagaccaa"))
-                                                new_unpacked_list[-1].primer_forward = new_unpacked_list[-2].primer_forward
-                                                new_unpacked_list[-1].primer_reverse = reverse_complement(silent_mut(new_unpacked_list[-2].sequence[:overhang_index],bsa_index[x],new_unpacked_list[-2].type)[-20:]+overhang+"agagaccaa")
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                                if len(bsa_index)>x+1:
-                                                    for q in range(x+1,len(bsa_index)):
-                                                        bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
-                                                new_unpacked_list.append(Part(new_unpacked_list[-2].name+"-"+str(x+1)+"b",new_unpacked_list[-2].type,"aaggtctca"+new_unpacked_list[-2].sequence[overhang_index:]))
-                                                new_unpacked_list[-1].primer_forward = "aaggtctca" + new_unpacked_list[-3].sequence[overhang_index:overhang_index+24]
-                                                new_unpacked_list[-1].primer_reverse = new_unpacked_list[-3].primer_reverse
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                                del new_unpacked_list[-3]
-                                            else:
-                                                pass
-                                        else:
-                                            if overhang in new_unpacked_list[-1].sequence[bsa_index[x]-30:bsa_index[x]]:
-                                                overhang_index = new_unpacked_list[-1].sequence.find(overhang,bsa_index[x]-30,bsa_index[x])
-                                                new_unpacked_list.append(Part(new_unpacked_list[-1].name+"-"+str(x+1)+"a",new_unpacked_list[-1].type,new_unpacked_list[-1].sequence[:overhang_index]+overhang+"agagaccaa"))
-                                                new_unpacked_list[-1].primer_forward = new_unpacked_list[-2].primer_forward
-                                                new_unpacked_list[-1].primer_reverse = reverse_complement(new_unpacked_list[-2].sequence[overhang_index-20:overhang_index]+overhang+"agagaccaa")
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                                if len(bsa_index)>x+1:
-                                                    for q in range(x+1,len(bsa_index)):
-                                                        bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
-                                                new_unpacked_list.append(Part(new_unpacked_list[-2].name+"-"+str(x+1)+"b",new_unpacked_list[-2].type,"aaggtctca"+silent_mut(new_unpacked_list[-2].sequence[overhang_index:],bsa_index[x]-overhang_index,new_unpacked_list[-2].type)))
-                                                new_unpacked_list[-1].primer_forward = "aaggtctca" + silent_mut(new_unpacked_list[-3].sequence[overhang_index:],bsa_index[x]-overhang_index,new_unpacked_list[-3].type)[:24]
-                                                new_unpacked_list[-1].primer_reverse = new_unpacked_list[-3].primer_reverse
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                                del new_unpacked_list[-3]
-                                            elif overhang in new_unpacked_list[-1].sequence[bsa_index[x]+6:bsa_index[x]+37]:
-                                                overhang_index = new_unpacked_list[-1].sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
-                                                new_unpacked_list.append(Part(new_unpacked_list[-1].name+"-"+str(x+1)+"a",new_unpacked_list[-1].type,silent_mut(new_unpacked_list[-1].sequence[:overhang_index],bsa_index[x],new_unpacked_list[-1].type)+overhang+"agagaccaa"))
-                                                new_unpacked_list[-1].primer_forward = new_unpacked_list[-2].primer_forward
-                                                new_unpacked_list[-1].primer_reverse = reverse_complement(silent_mut(new_unpacked_list[-2].sequence[:overhang_index],bsa_index[x],new_unpacked_list[-2].type)[-20:]+overhang+"agagaccaa")
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                                if len(bsa_index)>x+1:
-                                                    for q in range(x+1,len(bsa_index)):
-                                                        bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
-                                                new_unpacked_list.append(Part(new_unpacked_list[-2].name+"-"+str(x+1)+"b",new_unpacked_list[-2].type,"aaggtctca"+new_unpacked_list[-2].sequence[overhang_index:]))
-                                                new_unpacked_list[-1].primer_forward = "aaggtctca" + new_unpacked_list[-3].sequence[overhang_index:overhang_index+24]
-                                                new_unpacked_list[-1].primer_reverse = new_unpacked_list[-3].primer_reverse
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                                del new_unpacked_list[-3]
-                                            else:
-                                                pass
-                            else:
-                                new_unpacked_list.append(unpacked_list[i])
-                        new_builds_list.append(new_unpacked_list)
-                if golden_gate_method == "scarless_assembly":
-                    new_backbone_sequence = app.registry.get(session_id)["new_backbone_sequence"]
-                    new_builds_list = []
+                        if not breakit:
+                            backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
+                            backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:40]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:]))]
+                    else:
+                        for unpacked_list in builds_list:
+                            for part in unpacked_list:
+                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                        backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
+                        backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:40]),reverse_complement(new_backbone_sequence[-40:])]
+
+                    #Register new parts and direct to output page
+                    app.registry[session_id]["backbone_primers"] = backbone_primers
+                    app.registry[session_id]["backbone_primers_tm"] = backbone_primers_tm
+                    parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
+                    app.registry[session_id]['builds_list'] = builds_list
+                    app.registry[session_id]["backbone_list"] = backbone_list
+                    app.registry[session_id]["new_backbone_sequence"] = new_backbone_sequence
+                    self.redirect("/assembly")
+
+                #Run Gibson Assembly
+                #Based on the homology distance, generates primer sequences and modifies the DNA sequences and backbone sequences
+                if self.request.POST.get("assembly_method") == "Gibson_Assembly":
+                    parts_list,session_id = self.update_part_list()
+                    builds_list = builds(parts_list)
+                    app = webapp2.get_app()
+                    app.registry[session_id]['builds_list'] = builds_list
+                    new_backbone_sequence = backbone_sequence
+                    new_backbone_primers = [new_backbone_sequence[:40],new_backbone_sequence[-40:]]
                     for unpacked_list in builds_list:
-                        new_unpacked_list = []
-                        contains_bsaI = False
+                        backbone_list = []
                         for part in unpacked_list:
-                            part.assembly_method = "Type_II_Restriction_Enzyme"
-                            part.sequence = part.sequence.lower()
-                            if "ggtctc" in part.sequence or "gagacc" in part.sequence or "ggtctc" in backbone_sequence or "gagacc" in backbone_sequence:
-                                golden_gate_error = "BsaI_in_seq" +"|"+ part.name
-                                contains_bsaI = True
-                        def gg_scar_opt(unpacked_list,gg_overhangs):
-                            new_backbone_sequence = app.registry.get(session_id)["new_backbone_sequence"]
-                            golden_gate_overhangs = gg_overhangs
+                            part.assembly_method = "Gibson_Assembly"
+                        for i in range(len(unpacked_list)):
+                            if len(unpacked_list) < 2:
+                                self.redirect('/')
+                            if i == 0:
+                                if len(unpacked_list[i].sequence) >= 25:
+                                    unpacked_list[i].primer_forward = backbone_sequence[-25:] + unpacked_list[i].sequence[:25]
+                                else:
+                                    unpacked_list[i].primer_forward = backbone_sequence[-25:] + unpacked_list[i].sequence
+                                if len(unpacked_list[i].sequence) >= 25 and len(unpacked_list[i+1].sequence) >= 25:
+                                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-25:] + unpacked_list[i+1].sequence[:25])
+                                elif len(unpacked_list[i].sequence) >= 25 and len(unpacked_list[i+1].sequence) < 25:
+                                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-25:] + unpacked_list[i+1].sequence)
+                                elif len(unpacked_list[i].sequence) < 25 and len(unpacked_list[i+1].sequence) >= 25:
+                                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence[:25])
+                                else:
+                                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence)
+                            elif i == len(unpacked_list)-1:
+                                if len(unpacked_list[i].sequence) >= 25:
+                                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-25:] + backbone_sequence[:25])
+                                else:
+                                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + backbone_sequence[:25])
+                                if len(unpacked_list[i].sequence) >= 25 and len(unpacked_list[i-1].sequence) >= 25:
+                                    unpacked_list[i].primer_forward = unpacked_list[i-1].sequence[-25:] + unpacked_list[i].sequence[:25]
+                                elif len(unpacked_list[i].sequence) >= 25 and len(unpacked_list[i-1].sequence) < 25:
+                                    unpacked_list[i].primer_forward = unpacked_list[i-1].sequence + unpacked_list[i].sequence[:25]
+                                elif len(unpacked_list[i].sequence) < 25 and len(unpacked_list[i-1].sequence) >= 25:
+                                    unpacked_list[i].primer_forward = unpacked_list[i-1].sequence[-25:] + unpacked_list[i].sequence
+                                else:
+                                    unpacked_list[i].primer_forward = unpacked_list[i-1].sequence + unpacked_list[i].sequence
+                            else:
+                                if len(unpacked_list[i].sequence) >= 25 and len(unpacked_list[i-1].sequence) >= 25:
+                                    unpacked_list[i].primer_forward = unpacked_list[i-1].sequence[-25:] + unpacked_list[i].sequence[:25]
+                                elif len(unpacked_list[i].sequence) >= 25 and len(unpacked_list[i-1].sequence) < 25:
+                                    unpacked_list[i].primer_forward = unpacked_list[i-1].sequence + unpacked_list[i].sequence[:25]
+                                elif len(unpacked_list[i].sequence) < 25 and len(unpacked_list[i-1].sequence) >= 25:
+                                    unpacked_list[i].primer_forward = unpacked_list[i-1].sequence[-25:] + unpacked_list[i].sequence
+                                else:
+                                    unpacked_list[i].primer_forward = unpacked_list[i-1].sequence + unpacked_list[i].sequence
+                                if len(unpacked_list[i].sequence) >= 25 and len(unpacked_list[i+1].sequence) >= 25:
+                                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-25:] + unpacked_list[i+1].sequence[:25])
+                                elif len(unpacked_list[i].sequence) >= 25 and len(unpacked_list[i+1].sequence) < 25:
+                                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-25:] + unpacked_list[i+1].sequence)
+                                elif len(unpacked_list[i].sequence) < 25 and len(unpacked_list[i+1].sequence) >= 25:
+                                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence[:25])
+                                else:
+                                    unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence + unpacked_list[i+1].sequence)
+                        #parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
+                        new_backbone_sequence = unpacked_list[-1].sequence[-25:] + new_backbone_sequence + unpacked_list[0].sequence[:25]
+                        new_backbone_primers = [new_backbone_sequence[:40],new_backbone_sequence[-40:]]
+                        backbone_list.append([new_backbone_sequence,new_backbone_primers[0],new_backbone_primers[1]])
+                        for i in range(len(unpacked_list)):
+                            if len(unpacked_list) < 2:
+                                self.redirect('/')
+                            if i == 0:
+                                if len(unpacked_list[i+1].sequence) >= 25:
+                                    unpacked_list[i].sequence = backbone_sequence[-25:] + unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:25]
+                                else:
+                                    unpacked_list[i].sequence = backbone_sequence[-25:] + unpacked_list[i].sequence + unpacked_list[i+1].sequence
+                            elif i == len(unpacked_list)-1:
+                                if len(unpacked_list[i-1].sequence) >= 25:
+                                    unpacked_list[i].sequence = unpacked_list[i-1].sequence[-50:-25] + unpacked_list[i].sequence + backbone_sequence[:25]
+                                else:
+                                    unpacked_list[i].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence + backbone_sequence[:25]
+                            else:
+                                if len(unpacked_list[i-1].sequence) >= 25 and len(unpacked_list[i+1].sequence) >= 25:
+                                    unpacked_list[i].sequence = unpacked_list[i-1].sequence[-50:-25] + unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:25]
+                                elif len(unpacked_list[i-1].sequence) >= 25:
+                                    unpacked_list[i].sequence = unpacked_list[i-1].sequence[-50:-25] + unpacked_list[i].sequence + unpacked_list[i+1].sequence
+                                elif len(unpacked_list[i+1].sequence) >= 25:
+                                    unpacked_list[i].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence + unpacked_list[i+1].sequence[0:25]
+                                else:
+                                    unpacked_list[i].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence + unpacked_list[i+1].sequence
+
+                    #Optimize primer Tm based off the config settings
+                    if primer_optimization == "range":
+                        for unpacked_list in builds_list:
+                            for part in unpacked_list:
+                                if mt.Tm_NN(part.primer_forward) < primer_tm_range[0]:
+                                    part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                else:
+                                    for i in range(len(part.primer_forward),15,-1):
+                                        if mt.Tm_NN(part.primer_forward[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_forward[:i]) <= primer_tm_range[1]:
+                                            part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
+                                            part.primer_forward = part.primer_forward[:i]
+                                            break
+                                        else:
+                                            part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                if mt.Tm_NN(part.primer_reverse) < primer_tm_range[0]:
+                                    part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                                else:
+                                    for i in range(len(part.primer_reverse),15,-1):
+                                        if mt.Tm_NN(part.primer_reverse[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_reverse[:i]) <= primer_tm_range[1]:
+                                            part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:i])
+                                            part.primer_reverse = part.primer_reverse[:i]
+                                            break
+                                        else:
+                                            part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                        breakit=False
+                        for x in range(40,15,-1):
+                            for z in range(40,15,-1):
+                                if mt.Tm_NN(new_backbone_sequence[:x])>=primer_tm_range[0] and mt.Tm_NN(new_backbone_sequence[:x])<=primer_tm_range[1] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]) >= primer_tm_range[0] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]) <= primer_tm_range[1]:
+                                    backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-40:])[:z]]
+                                    backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z])]
+                                    breakit=True
+                                if breakit:
+                                    break
+                            if breakit:
+                                break
+                        if not breakit:
+                            backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
+                            backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:40]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:]))]
+                    elif primer_optimization == "near":
+                        for unpacked_list in builds_list:
+                            for part in unpacked_list:
+                                breakit=False
+                                for i in range(len(part.primer_forward),15,-1):
+                                    for j in range(len(part.primer_reverse),15,-1):
+                                        if abs(mt.Tm_NN(part.primer_forward[:i])-mt.Tm_NN(part.primer_reverse[:j])) <=5:
+                                            part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
+                                            part.primer_forward = part.primer_forward[:i]
+                                            part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:j])
+                                            part.primer_reverse = part.primer_reverse[:j]
+                                            breakit=True
+                                        if breakit:
+                                            break
+                                    if breakit:
+                                        break
+                                if not breakit:
+                                    part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                    part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                        breakit=False
+                        for x in range(40,15,-1):
+                            for z in range(40,15,-1):
+                                if abs(mt.Tm_NN(new_backbone_sequence[:x])-mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]))<=5:
+                                    backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-40:])[:z]]
+                                    backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z])]
+                                    breakit=True
+                                if breakit:
+                                    break
+                            if breakit:
+                                break
+                        if not breakit:
+                            backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
+                            backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:40]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:]))]
+                    elif primer_optimization == "both":
+                        for unpacked_list in builds_list:
+                            for part in unpacked_list:
+                                if mt.Tm_NN(part.primer_forward) < primer_tm_range[0] and mt.Tm_NN(part.primer_reverse) < primer_tm_range[0]:
+                                    part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                    part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                                elif mt.Tm_NN(part.primer_forward) < primer_tm_range[0] and mt.Tm_NN(part.primer_reverse) >= primer_tm_range[0]:
+                                    breakit=False
+                                    part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                    for j in range(len(part.primer_reverse),15,-1):
+                                        if abs(part.primer_forward_tm-mt.Tm_NN(part.primer_reverse[:j])) <=5:
+                                            part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:j])
+                                            part.primer_reverse = part.primer_reverse[:j]
+                                            breakit=True
+                                    if not breakit:
+                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                                elif mt.Tm_NN(part.primer_reverse) < primer_tm_range[0] and mt.Tm_NN(part.primer_forward) >= primer_tm_range[0]:
+                                    breakit=False
+                                    part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                                    for i in range(len(part.primer_forward),15,-1):
+                                        if abs(part.primer_reverse_tm-mt.Tm_NN(part.primer_forward[:i])) <=5:
+                                            part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
+                                            part.primer_forward = part.primer_forward[:i]
+                                            breakit=True
+                                    if not breakit:
+                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                else:
+                                    breakit=False
+                                    for i in range(len(part.primer_forward),15,-1):
+                                        for j in range(len(part.primer_reverse),15,-1):
+                                            if abs(mt.Tm_NN(part.primer_forward[:i])-mt.Tm_NN(part.primer_reverse[:j]))<=5 and mt.Tm_NN(part.primer_forward[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_forward[:i]) <= primer_tm_range[1] and mt.Tm_NN(part.primer_reverse[:j]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_reverse[:j]) <= primer_tm_range[1]:
+                                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
+                                                part.primer_forward = part.primer_forward[:i]
+                                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:j])
+                                                part.primer_reverse = part.primer_reverse[:j]
+                                                breakit=True
+                                            if breakit:
+                                                break
+                                        if breakit:
+                                            break
+                                    if not breakit:
+                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                        breakit=False
+                        for x in range(40,15,-1):
+                            for z in range(40,15,-1):
+                                if abs(mt.Tm_NN(new_backbone_sequence[:x])-mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]))<=5 and mt.Tm_NN(new_backbone_sequence[:x])>=primer_tm_range[0] and mt.Tm_NN(new_backbone_sequence[:x])<=primer_tm_range[1] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]) >= primer_tm_range[0] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z]) <= primer_tm_range[1]:
+                                    backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-40:])[:z]]
+                                    backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:])[:z])]
+                                    breakit=True
+                                if breakit:
+                                    break
+                            if breakit:
+                                break
+                        if not breakit:
+                            backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
+                            backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:40]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-40:]))]
+                    else:
+                        for unpacked_list in builds_list:
+                            for part in unpacked_list:
+                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                        backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
+                        backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:40]),reverse_complement(new_backbone_sequence[-40:])]
+
+                    #Register new parts and direct to output page
+                    app.registry[session_id]["backbone_primers"] = backbone_primers
+                    app.registry[session_id]["backbone_primers_tm"] = backbone_primers_tm
+                    parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
+                    app.registry[session_id]['builds_list'] = builds_list
+                    app.registry[session_id]["backbone_list"] = backbone_list
+                    app.registry[session_id]["new_backbone_sequence"] = new_backbone_sequence
+                    self.redirect("/assembly")
+
+                #Run Ligase Cycling Reaction
+                #Designs LCR bridges based off the LCR method (de Kok et al, 2014)
+                if self.request.POST.get("assembly_method") == "LCR":
+                    parts_list,session_id = self.update_part_list()
+                    builds_list = builds(parts_list)
+                    application = webapp2.get_app()
+                    application.registry[session_id]['builds_list'] = builds_list
+                    backbone_list=[]
+                    for unpacked_list in builds_list:
+                        for part in unpacked_list:
+                            part.assembly_method = "LCR"
+                        for i in range(len(unpacked_list)):
+                            if len(unpacked_list)<2:
+                                self.redirect('/')
+                            if i == (len(unpacked_list)-1):
+                                unpacked_list[i].bridge_with_next_part = create_LCR_bridge(unpacked_list[i].sequence,backbone_sequence[:200])
+                            if i == 0:
+                                unpacked_list[i].bridge_with_previous_part = create_LCR_bridge(backbone_sequence[-200:],unpacked_list[i].sequence)
+                            if i < (len(unpacked_list)-1):
+                                unpacked_list[i].bridge_with_next_part = create_LCR_bridge(unpacked_list[i].sequence,unpacked_list[i+1].sequence)
+                    
+                    #Register new parts and direct to output page
+                    application.registry[session_id]["backbone_primers"] = backbone_primers
+                    application.registry[session_id]["backbone_primers_tm"] = backbone_primers_tm
+                    parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
+                    application.registry[session_id]['builds_list'] = builds_list
+                    application.registry[session_id]["backbone_list"] = backbone_list
+                    self.redirect("/assembly")
+
+                #Run Golden Gate Assembly Design
+                #Based off the settings, particularly regular or scarless Golden Gate assembly and whether to remove BsaI sequences internal to the parts, the computation will be different
+                golden_gate_error=""
+                if self.request.POST.get("assembly_method") == "Type_II_Restriction_Enzyme":
+                    remove_bsaI = self.request.POST.get("remove_bsaI")
+                    parts_list,session_id = self.update_part_list()
+                    builds_list = builds(parts_list)
+                    app = webapp2.get_app()
+                    app.registry[session_id]['builds_list'] = builds_list
+                    new_backbone_sequence = backbone_sequence
+                    new_backbone_primers = [new_backbone_sequence[:40],new_backbone_sequence[-40:]]
+
+                    #Run regular Golden Gate assembly design
+                    if golden_gate_method == "regular_assembly":
+                        new_backbone_sequence = app.registry.get(session_id)["new_backbone_sequence"]
+                        new_builds_list = []
+                        for unpacked_list in builds_list:
+                            new_unpacked_list = []
+                            contains_bsaI = False
+                            #Check for BsaI sites in the sequences
+                            for part in unpacked_list:
+                                part.assembly_method = "Type_II_Restriction_Enzyme"
+                                part.sequence = part.sequence.lower()
+                                if "ggtctc" in part.sequence or "gagacc" in part.sequence or "ggtctc" in backbone_sequence or "gagacc" in backbone_sequence:
+                                    golden_gate_error = "BsaI_in_seq" +"|"+ part.name
+                                    contains_bsaI = True
+                            #Perform computation assuming BsaI sites must be removed
                             if remove_bsaI == "yes":
-                                golden_gate_error = ""
-                                bsaI_removal_combs = []
-                                bsaI_removal_key = []
-                                for part in unpacked_list:
-                                    part.sequence = part.sequence.lower()
-                                    bsa_index = []
-                                    ii=0
-                                    while len(bsa_index) != (part.sequence.count("ggtctc")+part.sequence.count("gagacc")) and ii<10*len(unpacked_list):
-                                        if "ggtctc" in part.sequence and "gagacc" not in part.sequence:
-                                            if bsa_index == []:
-                                                bsa_index.append(part.sequence.find("ggtctc"))
-                                            else:
-                                                bsa_index.append(part.sequence.find("ggtctc",bsa_index[-1]+1))
-                                        elif "gagacc" in part.sequence and "ggtctc" not in part.sequence:
-                                            if bsa_index == []:
-                                                bsa_index.append(part.sequence.find("gagacc"))
-                                            else:
-                                                bsa_index.append(part.sequence.find("gagacc",bsa_index[-1]+1))
-                                        elif "ggtctc" in part.sequence and "gagacc" in part.sequence:
-                                            if bsa_index == []:
-                                                bsa_index.append(min(part.sequence.find("ggtctc"),part.sequence.find("gagacc")))
-                                            else:
-                                                if part.sequence.find("ggtctc",bsa_index[-1]+1) == -1 or part.sequence.find("gagacc",bsa_index[-1]+1) == -1:
-                                                    bsa_index.append(max(part.sequence.find("ggtctc",bsa_index[-1]+1),part.sequence.find("gagacc",bsa_index[-1]+1)))
+                            	#Reserve overhangs for removing internal BsaI sites based on a set of GG linkers
+                                def gg_reg_opt(unpacked_list,gg_overhangs):
+                                    new_backbone_sequence = app.registry.get(session_id)["new_backbone_sequence"]
+                                    golden_gate_overhangs = gg_overhangs
+                                    golden_gate_error = ""
+                                    reserved_overhangs = []
+                                    bsaI_removal_map = {}
+                                    bsaI_removal_combs = []
+                                    bsaI_removal_key = []
+                                    for part in unpacked_list:
+                                        part.sequence = part.sequence.lower()
+                                        bsa_index = []
+                                        ii=0
+                                        while len(bsa_index) != (part.sequence.count("ggtctc")+part.sequence.count("gagacc")) and ii<10*len(unpacked_list):
+                                            if "ggtctc" in part.sequence and "gagacc" not in part.sequence:
+                                                if bsa_index == []:
+                                                    bsa_index.append(part.sequence.find("ggtctc"))
+                                                else:
+                                                    bsa_index.append(part.sequence.find("ggtctc",bsa_index[-1]+1))
+                                            elif "gagacc" in part.sequence and "ggtctc" not in part.sequence:
+                                                if bsa_index == []:
+                                                    bsa_index.append(part.sequence.find("gagacc"))
+                                                else:
+                                                    bsa_index.append(part.sequence.find("gagacc",bsa_index[-1]+1))
+                                            elif "ggtctc" in part.sequence and "gagacc" in part.sequence:
+                                                if bsa_index == []:
+                                                    bsa_index.append(min(part.sequence.find("ggtctc"),part.sequence.find("gagacc")))
                                                 else:
                                                     bsa_index.append(min(part.sequence.find("ggtctc",bsa_index[-1]+1),part.sequence.find("gagacc",bsa_index[-1]+1)))
+                                            ii+=1
+                                        if "ggtctc" in part.sequence or "gagacc" in part.sequence:
+                                            for xx in bsa_index:
+                                                bsaI_removal_key.append(part)
+                                            for i in range(len(bsa_index)):
+                                                bsaI_removal_combs.append([])
+                                                for overhang in golden_gate_overhangs:
+                                                    if overhang in part.sequence[bsa_index[i]-30:bsa_index[i]+37] and ((part.sequence[bsa_index[i]-30:bsa_index[i]+37].find(overhang)+bsa_index[i]-30)<(bsa_index[i]-3) or (part.sequence[bsa_index[i]-30:bsa_index[i]+37].find(overhang)+bsa_index[i]-30)>=(bsa_index[i]+6)):
+                                                        bsaI_removal_combs[-1].append(overhang)
+                                    new_backbone_sequence = new_backbone_sequence.lower()
+                                    bsa_index = []
+                                    ii = 0
+                                    while len(bsa_index) != (backbone_sequence.count("ggtctc")+backbone_sequence.count("gagacc")) and ii<10:
+                                        if "ggtctc" in backbone_sequence and "gagacc" not in backbone_sequence:
+                                            if bsa_index == []:
+                                                bsa_index.append(backbone_sequence.find("ggtctc"))
+                                            else:
+                                                bsa_index.append(backbone_sequence.find("ggtctc",bsa_index[-1]+1))
+                                        elif "gagacc" in backbone_sequence and "ggtctc" not in backbone_sequence:
+                                            if bsa_index == []:
+                                                bsa_index.append(backbone_sequence.find("gagacc"))
+                                            else:
+                                                bsa_index.append(backbone_sequence.find("gagacc",bsa_index[-1]+1))
+                                        elif "ggtctc" in backbone_sequence and "gagacc" in backbone_sequence:
+                                            if bsa_index == []:
+                                                bsa_index.append(min(backbone_sequence.find("ggtctc"),backbone_sequence.find("gagacc")))
+                                            else:
+                                                if backbone_sequence.find("ggtctc",bsa_index[-1]+1) == -1 or backbone_sequence.find("gagacc",bsa_index[-1]+1) == -1:
+                                                    bsa_index.append(max(backbone_sequence.find("ggtctc",bsa_index[-1]+1),backbone_sequence.find("gagacc",bsa_index[-1]+1)))
+                                                else:
+                                                    bsa_index.append(min(backbone_sequence.find("ggtctc",bsa_index[-1]+1),backbone_sequence.find("gagacc",bsa_index[-1]+1)))
                                         ii+=1
-                                    if "ggtctc" in part.sequence or "gagacc" in part.sequence:
+                                    if "ggtctc" in backbone_sequence or "gagacc" in backbone_sequence:
                                         for xx in bsa_index:
-                                            bsaI_removal_key.append(part)
+                                            bsaI_removal_key.append("backbone")
                                         for i in range(len(bsa_index)):
                                             bsaI_removal_combs.append([])
                                             for overhang in golden_gate_overhangs:
-                                                if overhang in part.sequence[bsa_index[i]-30:bsa_index[i]+37] and ((part.sequence[bsa_index[i]-30:bsa_index[i]+37].find(overhang)+bsa_index[i]-30)<(bsa_index[i]-3) or (part.sequence[bsa_index[i]-30:bsa_index[i]+37].find(overhang)+bsa_index[i]-30)>=(bsa_index[i]+6)):
+                                                if overhang in backbone_sequence[bsa_index[i]-30:bsa_index[i]+37] and ((backbone_sequence[bsa_index[i]-30:bsa_index[i]+37].find(overhang)+bsa_index[i]-30)<(bsa_index[i]-3) or (backbone_sequence[bsa_index[i]-30:bsa_index[i]+37].find(overhang)+bsa_index[i]-30)>=(bsa_index[i]+6)):
                                                     bsaI_removal_combs[-1].append(overhang)
-                                new_backbone_sequence = new_backbone_sequence.lower()
-                                bsa_index = []
-                                ii = 0
-                                while len(bsa_index) != (backbone_sequence.count("ggtctc")+backbone_sequence.count("gagacc")) and ii<10:
-                                    if "ggtctc" in backbone_sequence and "gagacc" not in backbone_sequence:
-                                        if bsa_index == []:
-                                            bsa_index.append(backbone_sequence.find("ggtctc"))
-                                        else:
-                                            bsa_index.append(backbone_sequence.find("ggtctc",bsa_index[-1]+1))
-                                    elif "gagacc" in backbone_sequence and "ggtctc" not in backbone_sequence:
-                                        if bsa_index == []:
-                                            bsa_index.append(backbone_sequence.find("gagacc"))
-                                        else:
-                                            bsa_index.append(backbone_sequence.find("gagacc",bsa_index[-1]+1))
-                                    elif "ggtctc" in backbone_sequence and "gagacc" in backbone_sequence:
-                                        if bsa_index == []:
-                                            bsa_index.append(min(backbone_sequence.find("ggtctc"),backbone_sequence.find("gagacc")))
-                                        else:
-                                            if backbone_sequence.find("ggtctc",bsa_index[-1]+1) == -1 or backbone_sequence.find("gagacc",bsa_index[-1]+1) == -1:
-                                                bsa_index.append(max(backbone_sequence.find("ggtctc",bsa_index[-1]+1),backbone_sequence.find("gagacc",bsa_index[-1]+1)))
+                                    combs = []
+                                    for x in itertools.product(*bsaI_removal_combs):
+                                        combs.append(x)
+                                    for comb in combs:
+                                        if len(comb) == len(set(comb)):
+                                            reserved_overhangs = comb
+                                    if reserved_overhangs != []:
+                                        for i in range(len(bsaI_removal_key)):
+                                            if bsaI_removal_key[i]=="backbone" and "backbone" in bsaI_removal_map.keys():
+                                                bsaI_removal_map["backbone"].append(reserved_overhangs[i])
+                                            elif bsaI_removal_key[i]=="backbone" and "backbone" not in bsaI_removal_map.keys():
+                                                bsaI_removal_map["backbone"] = [reserved_overhangs[i]]
+                                            elif bsaI_removal_key[i].name in bsaI_removal_map.keys():
+                                               bsaI_removal_map[bsaI_removal_key[i].name].append(reserved_overhangs[i])
                                             else:
-                                                bsa_index.append(min(backbone_sequence.find("ggtctc",bsa_index[-1]+1),backbone_sequence.find("gagacc",bsa_index[-1]+1)))
+                                                bsaI_removal_map[bsaI_removal_key[i].name] = [reserved_overhangs[i]]
+                                    else:
+                                        golden_gate_error = "no_efficient_overhang_combinations"
+                                        bsaI_removal_key = []
+                                    return reserved_overhangs,bsaI_removal_map,golden_gate_error
+                                #Try multiple sets of overhangs until a suitable set has been found
+                                breakit = False
+                                for i in range(10,51):
+                                    for j in range(5):
+                                        with open('/var/www/ibiocad/iBioCAD/overhangsets/setsof%s.csv'%i,'r') as f:
+                                            reader = csv.reader(f, delimiter=",")
+                                            temp = list(reader)[1:]
+                                        gg_overhangs = []
+                                        for x in range(i):
+                                            gg_overhangs.append(temp[j][x].lower())
+                                        if gg_reg_opt(unpacked_list,gg_overhangs)[2] == "" and (len(gg_reg_opt(unpacked_list,gg_overhangs)[0])+len(unpacked_list))<i :
+                                            breakit = True
+                                            reserved_overhangs,bsaI_removal_map,golden_gate_error = gg_reg_opt(unpacked_list,gg_overhangs)
+                                        if breakit:
+                                            break
+                                    if breakit:
+                                        break
+                            else:
+                                bsaI_removal_map = {}
+                                oh_num = max(len(unpacked_list),10)
+                                with open('/var/www/ibiocad/iBioCAD/overhangsets/setsof%s.csv'%oh_num,'r') as f:
+                                    reader = csv.reader(f, delimiter=",")
+                                    temp = list(reader)[1:]
+                                gg_overhangs = []
+                                for x in range(oh_num):
+                                    gg_overhangs.append(temp[0][x].lower())
+                            golden_gate_overhangs = gg_overhangs
+                            #Design flanking elements for Golden Gate assembly and primer design
+                            for i in range(len(unpacked_list)):
+                                if golden_gate_error != "" or remove_bsaI == "no":
+                                    break
+                                if remove_bsaI == "yes":
+                                    usable_overhangs = list(set(golden_gate_overhangs)-set(reserved_overhangs))
+                                else:
+                                    usable_overhangs = list(set(golden_gate_overhangs))
+                                if len(unpacked_list) > len(usable_overhangs):
+                                    break
+                                unpacked_list[i].primer_forward = "aaggtctca" + usable_overhangs[i] + unpacked_list[i].sequence[:20]
+                                unpacked_list[i].primer_reverse = reverse_complement(unpacked_list[i].sequence[-20:] + usable_overhangs[i+1] + "agagaccaa")
+                                unpacked_list[i].sequence = "aaggtctca" + usable_overhangs[i] + unpacked_list[i].sequence + usable_overhangs[i+1] + "agagaccaa"
+                                #Remove internal BsaI sites from non-backbone parts
+                                if unpacked_list[i].name in bsaI_removal_map.keys():
+                                    bsa_index = []
+                                    iii=0
+                                    while len(bsa_index) != (unpacked_list[i].sequence.count("ggtctc")+unpacked_list[i].sequence.count("gagacc"))-2 and iii<10*len(unpacked_list):
+                                        if "ggtctc" in unpacked_list[i].sequence[13:] and "gagacc" not in unpacked_list[i].sequence[:len(unpacked_list[i].sequence)-13]:
+                                            if bsa_index == []:
+                                                bsa_index.append(unpacked_list[i].sequence.find("ggtctc",13))
+                                            else:
+                                                bsa_index.append(unpacked_list[i].sequence.find("ggtctc",bsa_index[-1]+1))
+                                        elif "gagacc" in unpacked_list[i].sequence[:len(unpacked_list[i].sequence)-13] and "ggtctc" not in unpacked_list[i].sequence[13:]:
+                                            if bsa_index == []:
+                                                bsa_index.append(unpacked_list[i].sequence.find("gagacc",0,len(unpacked_list[i].sequence)-13))
+                                            else:
+                                                bsa_index.append(unpacked_list[i].sequence.find("gagacc",bsa_index[-1]+1))
+                                        elif "ggtctc" in unpacked_list[i].sequence[13:] and "gagacc" in unpacked_list[i].sequence[:len(unpacked_list[i].sequence)-13]:
+                                            if bsa_index == []:
+                                                bsa_index.append(min(unpacked_list[i].sequence.find("ggtctc",13),unpacked_list[i].sequence.find("gagacc",0,len(unpacked_list[i].sequence)-13)))
+                                            else:
+                                                bsa_index.append(min(unpacked_list[i].sequence.find("ggtctc",bsa_index[-1]+1),unpacked_list[i].sequence.find("gagacc",bsa_index[-1]+1)))
+                                        iii+=1
+                                    for x in range(len(bsaI_removal_map[unpacked_list[i].name])):
+                                        overhang = bsaI_removal_map[unpacked_list[i].name][x]
+                                        if x == 0:
+                                            if bsa_index[x]-30 < 0:
+                                                if overhang in unpacked_list[i].sequence[0:bsa_index[x]]:
+                                                    overhang_index = unpacked_list[i].sequence.find(overhang,0,bsa_index[x])
+                                                    new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"a",unpacked_list[i].type,unpacked_list[i].sequence[:overhang_index]+overhang+"agagaccaa"))
+                                                    new_unpacked_list[-1].primer_forward = unpacked_list[i].primer_forward
+                                                    new_unpacked_list[-1].primer_reverse = reverse_complement(unpacked_list[i].sequence[overhang_index-20:overhang_index]+overhang+"agagaccaa")
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    if len(bsa_index)>x+1:
+                                                        for q in range(x+1,len(bsa_index)):
+                                                            bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
+                                                    new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"b",unpacked_list[i].type,"aaggtctca"+silent_mut(unpacked_list[i].sequence[overhang_index:],bsa_index[x]-overhang_index,unpacked_list[i].type)))
+                                                    new_unpacked_list[-1].primer_forward = "aaggtctca" + silent_mut(unpacked_list[i].sequence[overhang_index:],bsa_index[x]-overhang_index,unpacked_list[i].type)[:24]
+                                                    new_unpacked_list[-1].primer_reverse = unpacked_list[i].primer_reverse
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                elif overhang in unpacked_list[i].sequence[bsa_index[x]+6:bsa_index[x]+37]:
+                                                    overhang_index = unpacked_list[i].sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
+                                                    new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"a",unpacked_list[i].type,silent_mut(unpacked_list[i].sequence[:overhang_index],bsa_index[x],unpacked_list[i].type)+overhang+"agagaccaa"))
+                                                    new_unpacked_list[-1].primer_forward = unpacked_list[i].primer_forward
+                                                    new_unpacked_list[-1].primer_reverse = reverse_complement(silent_mut(unpacked_list[i].sequence[:overhang_index],bsa_index[x],unpacked_list[i].type)[-20:]+overhang+"agagaccaa")
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    if len(bsa_index)>x+1:
+                                                        for q in range(x+1,len(bsa_index)):
+                                                            bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
+                                                    new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"b",unpacked_list[i].type,"aaggtctca"+unpacked_list[i].sequence[overhang_index:]))
+                                                    new_unpacked_list[-1].primer_forward = "aaggtctca" + unpacked_list[i].sequence[overhang_index:overhang_index+24]
+                                                    new_unpacked_list[-1].primer_reverse = unpacked_list[i].primer_reverse
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                else:
+                                                    pass
+                                            else:
+                                                if overhang in unpacked_list[i].sequence[bsa_index[x]-30:bsa_index[x]]:
+                                                    overhang_index = unpacked_list[i].sequence.find(overhang,bsa_index[x]-30,bsa_index[x])
+                                                    new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"a",unpacked_list[i].type,unpacked_list[i].sequence[:overhang_index]+overhang+"agagaccaa"))
+                                                    new_unpacked_list[-1].primer_forward = unpacked_list[i].primer_forward
+                                                    new_unpacked_list[-1].primer_reverse = reverse_complement(unpacked_list[i].sequence[overhang_index-20:overhang_index]+overhang+"agagaccaa")
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    if len(bsa_index)>x+1:
+                                                        for q in range(x+1,len(bsa_index)):
+                                                            bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
+                                                    new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"b",unpacked_list[i].type,"aaggtctca"+silent_mut(unpacked_list[i].sequence[overhang_index:],bsa_index[x]-overhang_index,unpacked_list[i].type)))
+                                                    new_unpacked_list[-1].primer_forward = "aaggtctca" + silent_mut(unpacked_list[i].sequence[overhang_index:],bsa_index[x]-overhang_index,unpacked_list[i].type)[:24]
+                                                    new_unpacked_list[-1].primer_reverse = unpacked_list[i].primer_reverse
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                elif overhang in unpacked_list[i].sequence[bsa_index[x]+6:bsa_index[x]+37]:
+                                                    overhang_index = unpacked_list[i].sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
+                                                    new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"a",unpacked_list[i].type,silent_mut(unpacked_list[i].sequence[:overhang_index],bsa_index[x],unpacked_list[i].type)+overhang+"agagaccaa"))
+                                                    new_unpacked_list[-1].primer_forward = unpacked_list[i].primer_forward
+                                                    new_unpacked_list[-1].primer_reverse = reverse_complement(silent_mut(unpacked_list[i].sequence[:overhang_index],bsa_index[x],unpacked_list[i].type)[-20:]+overhang+"agagaccaa")
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    if len(bsa_index)>x+1:
+                                                        for q in range(x+1,len(bsa_index)):
+                                                            bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
+                                                    new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"b",unpacked_list[i].type,"aaggtctca"+unpacked_list[i].sequence[overhang_index:]))
+                                                    new_unpacked_list[-1].primer_forward = "aaggtctca" + unpacked_list[i].sequence[overhang_index:overhang_index+24]
+                                                    new_unpacked_list[-1].primer_reverse = unpacked_list[i].primer_reverse
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                else:
+                                                    pass
+                                        else:
+                                            if bsa_index[x]-30 < 0:
+                                                if overhang in new_unpacked_list[-1].sequence[0:bsa_index[x]]:
+                                                    overhang_index = new_unpacked_list[-1].sequence.find(overhang,0,bsa_index[x])
+                                                    new_unpacked_list.append(Part(new_unpacked_list[-1].name+"-"+str(x+1)+"a",new_unpacked_list[-1].type,new_unpacked_list[-1].sequence[:overhang_index]+overhang+"agagaccaa"))
+                                                    new_unpacked_list[-1].primer_forward = new_unpacked_list[-2].primer_forward
+                                                    new_unpacked_list[-1].primer_reverse = reverse_complement(new_unpacked_list[-2].sequence[overhang_index-20:overhang_index]+overhang+"agagaccaa")
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    if len(bsa_index)>x+1:
+                                                        for q in range(x+1,len(bsa_index)):
+                                                            bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
+                                                    new_unpacked_list.append(Part(new_unpacked_list[-2].name+"-"+str(x+1)+"b",new_unpacked_list[-2].type,"aaggtctca"+silent_mut(new_unpacked_list[-2].sequence[overhang_index:],bsa_index[x]-overhang_index,new_unpacked_list[-2].type)))
+                                                    new_unpacked_list[-1].primer_forward = "aaggtctca" + silent_mut(new_unpacked_list[-3].sequence[overhang_index:],bsa_index[x]-overhang_index,new_unpacked_list[-3].type)[:24]
+                                                    new_unpacked_list[-1].primer_reverse = new_unpacked_list[-3].primer_reverse
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    del new_unpacked_list[-3]
+                                                elif overhang in new_unpacked_list[-1].sequence[bsa_index[x]+6:bsa_index[x]+37]:
+                                                    overhang_index = new_unpacked_list[-1].sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
+                                                    new_unpacked_list.append(Part(new_unpacked_list[-1].name+"-"+str(x+1)+"a",new_unpacked_list[-1].type,silent_mut(new_unpacked_list[-1].sequence[:overhang_index],bsa_index[x],new_unpacked_list[-1].type)+overhang+"agagaccaa"))
+                                                    new_unpacked_list[-1].primer_forward = new_unpacked_list[-2].primer_forward
+                                                    new_unpacked_list[-1].primer_reverse = reverse_complement(silent_mut(new_unpacked_list[-2].sequence[:overhang_index],bsa_index[x],new_unpacked_list[-2].type)[-20:]+overhang+"agagaccaa")
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    if len(bsa_index)>x+1:
+                                                        for q in range(x+1,len(bsa_index)):
+                                                            bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
+                                                    new_unpacked_list.append(Part(new_unpacked_list[-2].name+"-"+str(x+1)+"b",new_unpacked_list[-2].type,"aaggtctca"+new_unpacked_list[-2].sequence[overhang_index:]))
+                                                    new_unpacked_list[-1].primer_forward = "aaggtctca" + new_unpacked_list[-3].sequence[overhang_index:overhang_index+24]
+                                                    new_unpacked_list[-1].primer_reverse = new_unpacked_list[-3].primer_reverse
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    del new_unpacked_list[-3]
+                                                else:
+                                                    pass
+                                            else:
+                                                if overhang in new_unpacked_list[-1].sequence[bsa_index[x]-30:bsa_index[x]]:
+                                                    overhang_index = new_unpacked_list[-1].sequence.find(overhang,bsa_index[x]-30,bsa_index[x])
+                                                    new_unpacked_list.append(Part(new_unpacked_list[-1].name+"-"+str(x+1)+"a",new_unpacked_list[-1].type,new_unpacked_list[-1].sequence[:overhang_index]+overhang+"agagaccaa"))
+                                                    new_unpacked_list[-1].primer_forward = new_unpacked_list[-2].primer_forward
+                                                    new_unpacked_list[-1].primer_reverse = reverse_complement(new_unpacked_list[-2].sequence[overhang_index-20:overhang_index]+overhang+"agagaccaa")
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    if len(bsa_index)>x+1:
+                                                        for q in range(x+1,len(bsa_index)):
+                                                            bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
+                                                    new_unpacked_list.append(Part(new_unpacked_list[-2].name+"-"+str(x+1)+"b",new_unpacked_list[-2].type,"aaggtctca"+silent_mut(new_unpacked_list[-2].sequence[overhang_index:],bsa_index[x]-overhang_index,new_unpacked_list[-2].type)))
+                                                    new_unpacked_list[-1].primer_forward = "aaggtctca" + silent_mut(new_unpacked_list[-3].sequence[overhang_index:],bsa_index[x]-overhang_index,new_unpacked_list[-3].type)[:24]
+                                                    new_unpacked_list[-1].primer_reverse = new_unpacked_list[-3].primer_reverse
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    del new_unpacked_list[-3]
+                                                elif overhang in new_unpacked_list[-1].sequence[bsa_index[x]+6:bsa_index[x]+37]:
+                                                    overhang_index = new_unpacked_list[-1].sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
+                                                    new_unpacked_list.append(Part(new_unpacked_list[-1].name+"-"+str(x+1)+"a",new_unpacked_list[-1].type,silent_mut(new_unpacked_list[-1].sequence[:overhang_index],bsa_index[x],new_unpacked_list[-1].type)+overhang+"agagaccaa"))
+                                                    new_unpacked_list[-1].primer_forward = new_unpacked_list[-2].primer_forward
+                                                    new_unpacked_list[-1].primer_reverse = reverse_complement(silent_mut(new_unpacked_list[-2].sequence[:overhang_index],bsa_index[x],new_unpacked_list[-2].type)[-20:]+overhang+"agagaccaa")
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    if len(bsa_index)>x+1:
+                                                        for q in range(x+1,len(bsa_index)):
+                                                            bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
+                                                    new_unpacked_list.append(Part(new_unpacked_list[-2].name+"-"+str(x+1)+"b",new_unpacked_list[-2].type,"aaggtctca"+new_unpacked_list[-2].sequence[overhang_index:]))
+                                                    new_unpacked_list[-1].primer_forward = "aaggtctca" + new_unpacked_list[-3].sequence[overhang_index:overhang_index+24]
+                                                    new_unpacked_list[-1].primer_reverse = new_unpacked_list[-3].primer_reverse
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    del new_unpacked_list[-3]
+                                                else:
+                                                    pass
+                                else:
+                                    new_unpacked_list.append(unpacked_list[i])
+                            #Remove BsaI sites from backbone sequence
+                            if "backbone" in bsaI_removal_map.keys():
+                                bsa_index = []
+                                ii=0
+                                while len(bsa_index) != (new_backbone_sequence.count("ggtctc")+new_backbone_sequence.count("gagacc"))-2 and ii<10:
+                                    if "ggtctc" in new_backbone_sequence[13:] and "gagacc" not in new_backbone_sequence[:len(new_backbone_sequence)-13]:
+                                        if bsa_index == []:
+                                            bsa_index.append(new_backbone_sequence.find("ggtctc",13))
+                                        else:
+                                            bsa_index.append(new_backbone_sequence.find("ggtctc",bsa_index[-1]+1))
+                                    elif "gagacc" in new_backbone_sequence[:len(new_backbone_sequence)-13] and "ggtctc" not in new_backbone_sequence[13:]:
+                                        if bsa_index == []:
+                                            bsa_index.append(new_backbone_sequence.find("gagacc",0,len(new_backbone_sequence)-13))
+                                        else:
+                                            bsa_index.append(new_backbone_sequence.find("gagacc",bsa_index[-1]+1))
+                                    elif "ggtctc" in new_backbone_sequence[13:] and "gagacc" in new_backbone_sequence[:len(new_backbone_sequence)-13]:
+                                        if bsa_index == []:
+                                            bsa_index.append(min(new_backbone_sequence.find("ggtctc",13),new_backbone_sequence.find("gagacc",0,len(new_backbone_sequence)-13)))
+                                        else:
+                                            bsa_index.append(min(new_backbone_sequence.find("ggtctc",bsa_index[-1]+1),new_backbone_sequence.find("gagacc",bsa_index[-1]+1)))
                                     ii+=1
-                                if "ggtctc" in backbone_sequence or "gagacc" in backbone_sequence:
-                                    for xx in bsa_index:
-                                        bsaI_removal_key.append("backbone")
-                                    for i in range(len(bsa_index)):
-                                        bsaI_removal_combs.append([])
-                                        for overhang in golden_gate_overhangs:
-                                            if overhang in backbone_sequence[bsa_index[i]-30:bsa_index[i]+37] and ((backbone_sequence[bsa_index[i]-30:bsa_index[i]+37].find(overhang)+bsa_index[i]-30)<(bsa_index[i]-3) or (backbone_sequence[bsa_index[i]-30:bsa_index[i]+37].find(overhang)+bsa_index[i]-30)>=(bsa_index[i]+6)):
-                                                bsaI_removal_combs[-1].append(overhang)
+                                backbone_list = []
+                                new_backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
+                                for x in range(len(bsaI_removal_map["backbone"])):
+                                    backbone_list.append([])
+                                    backbone_list.append([])
+                                    overhang = bsaI_removal_map("backbone")[x]
+                                    if x == 0:
+                                        if bsa_index[x]-30 < 0:
+                                            if overhang in new_backbone_sequence[0:bsa_index[x]]:
+                                                overhang_index = new_backbone_sequence.find(overhang,0,bsa_index[x])
+                                                backbone_list[-2].append(new_backbone_sequence[:overhang_index]+overhang+"agagaccaa")
+                                                backbone_list[-2].append(new_backbone_primers[0])
+                                                backbone_list[-2].append(reverse_complement(new_backbone_sequence[overhang_index-40:overhang_index]+overhang+"agagaccaa"))
+                                                if len(bsa_index)>x+1:
+                                                    for q in range(x+1,len(bsa_index)):
+                                                        bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
+                                                backbone_list[-1].append("aaggtctca"+silent_mut(new_backbone_sequence[overhang_index:],bsa_index[x]-overhang_index,"CDS"))
+                                                backbone_list[-1].append("aaggtctca" + silent_mut(new_backbone_sequence[overhang_index:],bsa_index[x]-overhang_index,"CDS")[:44])
+                                                backbone_list[-1].append(new_backbone_primers[1])
+                                            elif overhang in new_backbone_sequence[bsa_index[x]+6:bsa_index[x]+37]:
+                                                overhang_index = new_backbone_sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
+                                                backbone_list[-2].append(silent_mut(new_backbone_sequence[:overhang_index],bsa_index[x],"CDS")+overhang+"agagaccaa")
+                                                backbone_list[-2].append(new_backbone_primers[0])
+                                                backbone_list[-2].append(reverse_complement(silent_mut(new_backbone_sequence[:overhang_index],bsa_index[x],"CDS")[-40:]+overhang+"agagaccaa"))
+                                                if len(bsa_index)>x+1:
+                                                    for q in range(x+1,len(bsa_index)):
+                                                        bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
+                                                backbone_list[-1].append("aaggtctca"+new_backbone_sequence[overhang_index:])
+                                                backbone_list[-1].append("aaggtctca" + new_backbone_sequence[overhang_index:overhang_index+44])
+                                                backbone_list[-1].append(new_backbone_primers[1])
+                                            else:
+                                                pass
+                                        else:
+                                            if overhang in new_backbone_sequence[bsa_index[x]-30:bsa_index[x]]:
+                                                overhang_index = new_backbone_sequence.find(overhang,bsa_index[x]-30,bsa_index[x])
+                                                backbone_list[-2].append(new_backbone_sequence[:overhang_index]+overhang+"agagaccaa")
+                                                backbone_list[-2].append(new_backbone_primers[0])
+                                                backbone_list[-2].append(reverse_complement(new_backbone_sequence[overhang_index-40:overhang_index]+overhang+"agagaccaa"))
+                                                if len(bsa_index)>x+1:
+                                                    for q in range(x+1,len(bsa_index)):
+                                                        bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
+                                                backbone_list[-1].append("aaggtctca"+silent_mut(new_backbone_sequence[overhang_index:],bsa_index[x]-overhang_index,"CDS"))
+                                                backbone_list[-1].append("aaggtctca" + silent_mut(new_backbone_sequence[overhang_index:],bsa_index[x]-overhang_index,"CDS")[:44])
+                                                backbone_list[-1].append(new_backbone_primers[1])
+                                            elif overhang in new_backbone_sequence[bsa_index[x]+6:bsa_index[x]+37]:
+                                                overhang_index = new_backbone_sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
+                                                backbone_list[-2].append(silent_mut(new_backbone_sequence[:overhang_index],bsa_index[x],"CDS")+overhang+"agagaccaa")
+                                                backbone_list[-2].append(new_backbone_primers[0])
+                                                backbone_list[-2].append(reverse_complement(silent_mut(new_backbone_sequence[:overhang_index],bsa_index[x],"CDS")[-40:]+overhang+"agagaccaa"))
+                                                if len(bsa_index)>x+1:
+                                                    for q in range(x+1,len(bsa_index)):
+                                                        bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
+                                                backbone_list[-1].append("aaggtctca"+new_backbone_sequence[overhang_index:])
+                                                backbone_list[-1].append("aaggtctca" + new_backbone_sequence[overhang_index:overhang_index+44])
+                                                backbone_list[-1].append(new_backbone_primers[1])
+                                            else:
+                                                pass
+                                    else:
+                                        if bsa_index[x]-30 < 0:
+                                            if overhang in backbone_list[-3][0][0:bsa_index[x]]:
+                                                overhang_index = backbone_list[-3][0].find(overhang,0,bsa_index[x])
+                                                backbone_list[-2].append(backbone_list[-3][0][:overhang_index]+overhang+"agagaccaa")
+                                                backbone_list[-2].append(backbone_list[-3][1])
+                                                backbone_list[-2].append(reverse_complement(backbone_list[-3][0][overhang_index-40:overhang_index]+overhang+"agagaccaa"))
+                                                if len(bsa_index)>x+1:
+                                                    for q in range(x+1,len(bsa_index)):
+                                                        bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
+                                                backbone_list[-1].append("aaggtctca"+silent_mut(backbone_list[-3][0][overhang_index:],bsa_index[x]-overhang_index,"CDS"))
+                                                backbone_list[-1].append("aaggtctca" + silent_mut(backbone_list[-3][0][overhang_index:],bsa_index[x]-overhang_index,"CDS")[:44])
+                                                backbone_list[-1].append(backbone_list[-3][2])
+                                                del backbone_list[-3]
+                                            elif overhang in backbone_list[-3][0][bsa_index[x]+6:bsa_index[x]+37]:
+                                                overhang_index = backbone_list[-3][0].find(overhang,bsa_index[x]+6,bsa_index[x]+37)
+                                                backbone_list[-2].append(silent_mut(backbone_list[-3][0][:overhang_index],bsa_index[x],"CDS")+overhang+"agagaccaa")
+                                                backbone_list[-2].append(backbone_list[-3][1])
+                                                backbone_list[-2].append(reverse_complement(silent_mut(backbone_list[-3][0][:overhang_index],bsa_index[x],"CDS")[-40:]+overhang+"agagaccaa"))
+                                                if len(bsa_index)>x+1:
+                                                    for q in range(x+1,len(bsa_index)):
+                                                        bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
+                                                backbone_list[-1].append("aaggtctca"+backbone_list[-3][0][overhang_index:])
+                                                backbone_list[-1].append("aaggtctca" + backbone_list[-3][0][overhang_index:overhang_index+44])
+                                                backbone_list[-1].append(backbone_list[-3][2])
+                                                del backbone_list[-3]
+                                            else:
+                                                pass
+                                        else:
+                                            if overhang in backbone_list[-3][0][bsa_index[x]-30:bsa_index[x]]:
+                                                overhang_index = backbone_list[-3][0].find(overhang,bsa_index[x]-30,bsa_index[x])
+                                                backbone_list[-2].append(backbone_list[-3][0][:overhang_index]+overhang+"agagaccaa")
+                                                backbone_list[-2].append(backbone_list[-3][1])
+                                                backbone_list[-2].append(reverse_complement(backbone_list[-3][0][overhang_index-40:overhang_index]+overhang+"agagaccaa"))
+                                                if len(bsa_index)>x+1:
+                                                    for q in range(x+1,len(bsa_index)):
+                                                        bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
+                                                backbone_list[-1].append("aaggtctca"+silent_mut(backbone_list[-3][0][overhang_index:],bsa_index[x]-overhang_index,"CDS"))
+                                                backbone_list[-1].append("aaggtctca" + silent_mut(backbone_list[-3][0][overhang_index:],bsa_index[x]-overhang_index,"CDS")[:44])
+                                                backbone_list[-1].append(backbone_list[-3][2])
+                                                del backbone_list[-3]
+                                            elif overhang in backbone_list[-3][0][bsa_index[x]+6:bsa_index[x]+37]:
+                                                overhang_index = backbone_list[-3][0].find(overhang,bsa_index[x]+6,bsa_index[x]+37)
+                                                backbone_list[-2].append(silent_mut(backbone_list[-3][0][:overhang_index],bsa_index[x],"CDS")+overhang+"agagaccaa")
+                                                backbone_list[-2].append(backbone_list[-3][1])
+                                                backbone_list[-2].append(reverse_complement(silent_mut(backbone_list[-3][0][:overhang_index],bsa_index[x],"CDS")[-40:]+overhang+"agagaccaa"))
+                                                if len(bsa_index)>x+1:
+                                                    for q in range(x+1,len(bsa_index)):
+                                                        bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
+                                                backbone_list[-1].append("aaggtctca"+backbone_list[-3][0][overhang_index:])
+                                                backbone_list[-1].append("aaggtctca" + backbone_list[-3][0][overhang_index:overhang_index+44])
+                                                backbone_list[-1].append(backbone_list[-3][2])
+                                                del backbone_list[-3]
+                                            else:
+                                                pass
                             else:
-                                bsaI_removal_combs = []
+                                backbone_list = [[new_backbone_sequence,new_backbone_sequence[:60],reverse_complement(new_backbone_sequence[-60:])]]
+                            new_builds_list.append(new_unpacked_list)
+
+                    #Perform scarless Golden Gate assembly computation
+                    if golden_gate_method == "scarless_assembly":
+                        new_backbone_sequence = app.registry.get(session_id)["new_backbone_sequence"]
+                        new_builds_list = []
+                        for unpacked_list in builds_list:
+                            new_unpacked_list = []
+                            contains_bsaI = False
+                            for part in unpacked_list:
+                                part.assembly_method = "Type_II_Restriction_Enzyme"
+                                part.sequence = part.sequence.lower()
+                                if "ggtctc" in part.sequence or "gagacc" in part.sequence or "ggtctc" in backbone_sequence or "gagacc" in backbone_sequence:
+                                    golden_gate_error = "BsaI_in_seq" +"|"+ part.name
+                                    contains_bsaI = True
+                            #Given a list of linkers, try to find an efficient assignment of linkers for scarless GG assembly
+                            def gg_scar_opt(unpacked_list,gg_overhangs):
+                                new_backbone_sequence = app.registry.get(session_id)["new_backbone_sequence"]
+                                golden_gate_overhangs = gg_overhangs
+                                if remove_bsaI == "yes":
+                                    golden_gate_error = ""
+                                    bsaI_removal_combs = []
+                                    bsaI_removal_key = []
+                                    for part in unpacked_list:
+                                        part.sequence = part.sequence.lower()
+                                        bsa_index = []
+                                        ii=0
+                                        while len(bsa_index) != (part.sequence.count("ggtctc")+part.sequence.count("gagacc")) and ii<10*len(unpacked_list):
+                                            if "ggtctc" in part.sequence and "gagacc" not in part.sequence:
+                                                if bsa_index == []:
+                                                    bsa_index.append(part.sequence.find("ggtctc"))
+                                                else:
+                                                    bsa_index.append(part.sequence.find("ggtctc",bsa_index[-1]+1))
+                                            elif "gagacc" in part.sequence and "ggtctc" not in part.sequence:
+                                                if bsa_index == []:
+                                                    bsa_index.append(part.sequence.find("gagacc"))
+                                                else:
+                                                    bsa_index.append(part.sequence.find("gagacc",bsa_index[-1]+1))
+                                            elif "ggtctc" in part.sequence and "gagacc" in part.sequence:
+                                                if bsa_index == []:
+                                                    bsa_index.append(min(part.sequence.find("ggtctc"),part.sequence.find("gagacc")))
+                                                else:
+                                                    if part.sequence.find("ggtctc",bsa_index[-1]+1) == -1 or part.sequence.find("gagacc",bsa_index[-1]+1) == -1:
+                                                        bsa_index.append(max(part.sequence.find("ggtctc",bsa_index[-1]+1),part.sequence.find("gagacc",bsa_index[-1]+1)))
+                                                    else:
+                                                        bsa_index.append(min(part.sequence.find("ggtctc",bsa_index[-1]+1),part.sequence.find("gagacc",bsa_index[-1]+1)))
+                                            ii+=1
+                                        if "ggtctc" in part.sequence or "gagacc" in part.sequence:
+                                            for xx in bsa_index:
+                                                bsaI_removal_key.append(part)
+                                            for i in range(len(bsa_index)):
+                                                bsaI_removal_combs.append([])
+                                                for overhang in golden_gate_overhangs:
+                                                    if overhang in part.sequence[bsa_index[i]-30:bsa_index[i]+37] and ((part.sequence[bsa_index[i]-30:bsa_index[i]+37].find(overhang)+bsa_index[i]-30)<(bsa_index[i]-3) or (part.sequence[bsa_index[i]-30:bsa_index[i]+37].find(overhang)+bsa_index[i]-30)>=(bsa_index[i]+6)):
+                                                        bsaI_removal_combs[-1].append(overhang)
+                                    new_backbone_sequence = new_backbone_sequence.lower()
+                                    bsa_index = []
+                                    ii = 0
+                                    while len(bsa_index) != (backbone_sequence.count("ggtctc")+backbone_sequence.count("gagacc")) and ii<10:
+                                        if "ggtctc" in backbone_sequence and "gagacc" not in backbone_sequence:
+                                            if bsa_index == []:
+                                                bsa_index.append(backbone_sequence.find("ggtctc"))
+                                            else:
+                                                bsa_index.append(backbone_sequence.find("ggtctc",bsa_index[-1]+1))
+                                        elif "gagacc" in backbone_sequence and "ggtctc" not in backbone_sequence:
+                                            if bsa_index == []:
+                                                bsa_index.append(backbone_sequence.find("gagacc"))
+                                            else:
+                                                bsa_index.append(backbone_sequence.find("gagacc",bsa_index[-1]+1))
+                                        elif "ggtctc" in backbone_sequence and "gagacc" in backbone_sequence:
+                                            if bsa_index == []:
+                                                bsa_index.append(min(backbone_sequence.find("ggtctc"),backbone_sequence.find("gagacc")))
+                                            else:
+                                                if backbone_sequence.find("ggtctc",bsa_index[-1]+1) == -1 or backbone_sequence.find("gagacc",bsa_index[-1]+1) == -1:
+                                                    bsa_index.append(max(backbone_sequence.find("ggtctc",bsa_index[-1]+1),backbone_sequence.find("gagacc",bsa_index[-1]+1)))
+                                                else:
+                                                    bsa_index.append(min(backbone_sequence.find("ggtctc",bsa_index[-1]+1),backbone_sequence.find("gagacc",bsa_index[-1]+1)))
+                                        ii+=1
+                                    if "ggtctc" in backbone_sequence or "gagacc" in backbone_sequence:
+                                        for xx in bsa_index:
+                                            bsaI_removal_key.append("backbone")
+                                        for i in range(len(bsa_index)):
+                                            bsaI_removal_combs.append([])
+                                            for overhang in golden_gate_overhangs:
+                                                if overhang in backbone_sequence[bsa_index[i]-30:bsa_index[i]+37] and ((backbone_sequence[bsa_index[i]-30:bsa_index[i]+37].find(overhang)+bsa_index[i]-30)<(bsa_index[i]-3) or (backbone_sequence[bsa_index[i]-30:bsa_index[i]+37].find(overhang)+bsa_index[i]-30)>=(bsa_index[i]+6)):
+                                                    bsaI_removal_combs[-1].append(overhang)
+                                else:
+                                    bsaI_removal_combs = []
+                                    bsaI_removal_key = []
+                                return bsaI_removal_combs,bsaI_removal_key,golden_gate_error
+                            #Find an efficient linker set for the scarless assembly, including removing internal BsaI sites
+                            if remove_bsaI == "yes":
+                                golden_gate_error = ""
+                                breakit = False
+                                for p in range(10,51):
+                                    for q in range(5):
+                                        with open('/var/www/ibiocad/iBioCAD/overhangsets/setsof%s.csv'%p,'r') as f:
+                                            reader = csv.reader(f, delimiter=",")
+                                            temp = list(reader)[1:]
+                                        gg_overhangs = []
+                                        for x in range(p):
+                                            gg_overhangs.append(temp[q][x].lower())
+                                        bsaI_removal_combs,bsaI_removal_key,golden_gate_error = gg_scar_opt(unpacked_list,gg_overhangs)
+                                        gg_opt = golden_gate_optimization(unpacked_list,backbone_sequence,gg_overhangs,bsaI_combs=bsaI_removal_combs)
+                                        if gg_opt is not None:
+                                            breakit = True
+                                        if breakit:
+                                            break
+                                    if breakit:
+                                        break
+                            #Find an efficient linker set for the scarless assembly if there are no internal BsaI sites
+                            elif contains_bsaI==False:
+                                golden_gate_error = ""
                                 bsaI_removal_key = []
-                            return bsaI_removal_combs,bsaI_removal_key,golden_gate_error
-                        if remove_bsaI == "yes":
-                            golden_gate_error = ""
-                            breakit = False
-                            for p in range(10,51):
-                                for q in range(5):
-                                    with open('/var/www/ibiocad/iBioCAD/overhangsets/setsof%s.csv'%p,'r') as f:
-                                        reader = csv.reader(f, delimiter=",")
-                                        temp = list(reader)[1:]
-                                    gg_overhangs = []
-                                    for x in range(p):
-                                        gg_overhangs.append(temp[q][x].lower())
-                                    bsaI_removal_combs,bsaI_removal_key,golden_gate_error = gg_scar_opt(unpacked_list,gg_overhangs)
-                                    gg_opt = golden_gate_optimization(unpacked_list,backbone_sequence,gg_overhangs,bsaI_combs=bsaI_removal_combs)
-                                    if gg_opt is not None:
-                                        breakit = True
+                                breakit = False
+                                for p in range(10,51):
+                                    for q in range(5):
+                                        with open('/var/www/ibiocad/iBioCAD/overhangsets/setsof%s.csv'%p,'r') as f:
+                                            reader = csv.reader(f, delimiter=",")
+                                            temp = list(reader)[1:]
+                                        gg_overhangs = []
+                                        for x in range(p):
+                                            gg_overhangs.append(temp[q][x].lower())
+                                        gg_opt = golden_gate_optimization(unpacked_list,backbone_sequence,gg_overhangs)
+                                        if gg_opt is not None:
+                                            breakit = True
+                                        if breakit:
+                                            break
                                     if breakit:
                                         break
-                                if breakit:
-                                    break
-                        elif contains_bsaI==False:
-                            golden_gate_error = ""
-                            bsaI_removal_key = []
-                            breakit = False
-                            for p in range(10,51):
-                                for q in range(5):
-                                    with open('/var/www/ibiocad/iBioCAD/overhangsets/setsof%s.csv'%p,'r') as f:
-                                        reader = csv.reader(f, delimiter=",")
-                                        temp = list(reader)[1:]
-                                    gg_overhangs = []
-                                    for x in range(p):
-                                        gg_overhangs.append(temp[q][x].lower())
-                                    gg_opt = golden_gate_optimization(unpacked_list,backbone_sequence,gg_overhangs)
-                                    if gg_opt is not None:
-                                        breakit = True
-                                    if breakit:
-                                        break
-                                if breakit:
-                                    break
-                        else:
-                            bsaI_removal_key = []
-                        for i in range(len(unpacked_list)):
-                            if golden_gate_error != "" or remove_bsaI == "no":
-                                break
-                            if bsaI_removal_key is not None:
-                                bsa_len = len(bsaI_removal_key)
+                            #Find an efficient linker set for scarless assembly, if internal BsaI sites should not be removed
                             else:
-                                bsa_len = 0
-                            if i == 0:
-                                if gg_opt[0] in new_backbone_sequence[-35:]:
-                                    new_backbone_sequence = new_backbone_sequence[:new_backbone_sequence.find(gg_opt[0],len(new_backbone_sequence)-35)] + gg_opt[0] + "agagaccaa"
-                                    unpacked_list[0].primer_forward = "aaggtctca" + new_backbone_sequence[new_backbone_sequence.find(gg_opt[0],len(new_backbone_sequence)-35):-9] + unpacked_list[0].sequence[:40]
-                                    unpacked_list[0].sequence = "aaggtctca" + new_backbone_sequence[new_backbone_sequence.find(gg_opt[0],len(new_backbone_sequence)-35):-9] + unpacked_list[0].sequence
-                                elif gg_opt[0] in unpacked_list[0].sequence[:35]:
-                                    new_backbone_sequence = new_backbone_sequence + unpacked_list[0].sequence[:unpacked_list[0].sequence.find(gg_opt[0])] + gg_opt[0] + "agagaccaa"
-                                    unpacked_list[0].primer_forward = "aaggtctca" + unpacked_list[0].sequence[unpacked_list[0].sequence.find(gg_opt[0]):unpacked_list[0].sequence.find(gg_opt[0])+40]
-                                    unpacked_list[0].sequence = "aaggtctca" + unpacked_list[0].sequence[unpacked_list[0].sequence.find(gg_opt[0]):]
-                                if len(unpacked_list)==1:
+                                bsaI_removal_key = []
+                            #Modify sequences and design primers
+                            #First, modify sequences at the junctions between parts
+                            for i in range(len(unpacked_list)):
+                                if golden_gate_error != "" or remove_bsaI == "no":
+                                    break
+                                if bsaI_removal_key is not None:
+                                    bsa_len = len(bsaI_removal_key)
+                                else:
+                                    bsa_len = 0
+                                if i == 0:
+                                    if gg_opt[0] in new_backbone_sequence[-35:]:
+                                        new_backbone_sequence = new_backbone_sequence[:new_backbone_sequence.find(gg_opt[0],len(new_backbone_sequence)-35)] + gg_opt[0] + "agagaccaa"
+                                        unpacked_list[0].primer_forward = "aaggtctca" + new_backbone_sequence[new_backbone_sequence.find(gg_opt[0],len(new_backbone_sequence)-35):-9] + unpacked_list[0].sequence[:40]
+                                        unpacked_list[0].sequence = "aaggtctca" + new_backbone_sequence[new_backbone_sequence.find(gg_opt[0],len(new_backbone_sequence)-35):-9] + unpacked_list[0].sequence
+                                    elif gg_opt[0] in unpacked_list[0].sequence[:35]:
+                                        new_backbone_sequence = new_backbone_sequence + unpacked_list[0].sequence[:unpacked_list[0].sequence.find(gg_opt[0])] + gg_opt[0] + "agagaccaa"
+                                        unpacked_list[0].primer_forward = "aaggtctca" + unpacked_list[0].sequence[unpacked_list[0].sequence.find(gg_opt[0]):unpacked_list[0].sequence.find(gg_opt[0])+40]
+                                        unpacked_list[0].sequence = "aaggtctca" + unpacked_list[0].sequence[unpacked_list[0].sequence.find(gg_opt[0]):]
+                                    if len(unpacked_list)==1:
+                                        if gg_opt[-1-bsa_len] in new_backbone_sequence[:35]:
+                                            unpacked_list[-1].primer_reverse = reverse_complement(unpacked_list[-1].sequence[-40:] + new_backbone_sequence[9:new_backbone_sequence.find(gg_opt[-1-bsa_len])] + gg_opt[-1-bsa_len] + "agagaccaa")
+                                            unpacked_list[-1].sequence = unpacked_list[-1].sequence + new_backbone_sequence[:new_backbone_sequence.find(gg_opt[-1-bsa_len])] + gg_opt[-1-bsa_len] + "agagaccaa"
+                                            new_backbone_sequence = "aaggtctca" + new_backbone_sequence[new_backbone_sequence.find(gg_opt[-1-bsa_len]):]
+                                        elif gg_opt[-1-bsa_len] in unpacked_list[-1].sequence[-35:]:
+                                            new_backbone_sequence = "aaggtctca" + unpacked_list[-1].sequence[unpacked_list[-1].sequence.find(gg_opt[-1-bsa_len],len(unpacked_list[-1].sequence)-35):] + new_backbone_sequence
+                                            unpacked_list[-1].primer_reverse = reverse_complement(unpacked_list[-1].sequence[unpacked_list[-1].sequence.find(gg_opt[-1-bsa_len],len(unpacked_list[-1].sequence)-35)-40:unpacked_list[-1].sequence.find(gg_opt[-1-bsa_len],len(unpacked_list[-1].sequence)-35)] + gg_opt[-1-bsa_len] + "agagaccaa")
+                                            unpacked_list[-1].sequence = unpacked_list[-1].sequence[:unpacked_list[-1].sequence.find(gg_opt[-1-bsa_len],len(unpacked_list[-1].sequence)-35)] + gg_opt[-1-bsa_len] + "agagaccaa"
+                                        else:
+                                            pass
+                                        #if gg_opt[-2-bsa_len] in unpacked_list[-1].sequence[:35]:
+                                        #    unpacked_list[-2].primer_reverse = reverse_complement(unpacked_list[-2].sequence[-40:] + unpacked_list[-1].sequence[:unpacked_list[-1].sequence.find(gg_opt[-2-bsa_len])] + gg_opt[-2-bsa_len] + "agagaccaa")
+                                        #    unpacked_list[-1].primer_forward = "aaggtctca" + unpacked_list[-1].sequence[unpacked_list[-1].sequence.find(gg_opt[-2-bsa_len]):unpacked_list[-1].sequence.find(gg_opt[-2-bsa_len])+40]
+                                        #    unpacked_list[-2].sequence = unpacked_list[-2].sequence + unpacked_list[-1].sequence[:unpacked_list[-1].sequence.find(gg_opt[-2-bsa_len])] + gg_opt[-2-bsa_len] + "agagaccaa"
+                                        #    unpacked_list[-1].sequence = "aaggtctca" + unpacked_list[-1].sequence[unpacked_list[-1].sequence.find(gg_opt[-2-bsa_len]):]
+                                        #elif gg_opt[-2-bsa_len] in unpacked_list[-2].sequence[-35:]:
+                                        #    unpacked_list[-2].primer_reverse = reverse_complement(unpacked_list[-2].sequence[unpacked_list[-2].sequence.find(gg_opt[-2-bsa_len],len(unpacked_list[-2].sequence)-35)-40:unpacked_list[-2].sequence.find(gg_opt[-2-bsa_len],len(unpacked_list[-2].sequence)-35)] + gg_opt[-2-bsa_len] + "agagaccaa")
+                                        #    unpacked_list[-1].primer_forward = "aaggtctca" + unpacked_list[-2].sequence[unpacked_list[-2].sequence.find(gg_opt[-2-bsa_len],len(unpacked_list[-2].sequence)-35):] + unpacked_list[-1].sequence[:40]
+                                        #    unpacked_list[-1].sequence = "aaggtctca" + unpacked_list[-2].sequence[unpacked_list[-2].sequence.find(gg_opt[-2-bsa_len],len(unpacked_list[-2].sequence)-35):] + unpacked_list[-1].sequence
+                                        #    unpacked_list[-2].sequence = unpacked_list[-2].sequence[:unpacked_list[-2].sequence.find(gg_opt[-2-bsa_len],len(unpacked_list[-2].sequence)-35)] + gg_opt[-2-bsa_len] + "agagaccaa"
+                                        #else:
+                                        #    pass
+                                elif i == len(unpacked_list)-1:
                                     if gg_opt[-1-bsa_len] in new_backbone_sequence[:35]:
                                         unpacked_list[-1].primer_reverse = reverse_complement(unpacked_list[-1].sequence[-40:] + new_backbone_sequence[9:new_backbone_sequence.find(gg_opt[-1-bsa_len])] + gg_opt[-1-bsa_len] + "agagaccaa")
                                         unpacked_list[-1].sequence = unpacked_list[-1].sequence + new_backbone_sequence[:new_backbone_sequence.find(gg_opt[-1-bsa_len])] + gg_opt[-1-bsa_len] + "agagaccaa"
@@ -1498,441 +1635,365 @@ try:
                                         unpacked_list[-1].sequence = unpacked_list[-1].sequence[:unpacked_list[-1].sequence.find(gg_opt[-1-bsa_len],len(unpacked_list[-1].sequence)-35)] + gg_opt[-1-bsa_len] + "agagaccaa"
                                     else:
                                         pass
-                                    #if gg_opt[-2-bsa_len] in unpacked_list[-1].sequence[:35]:
-                                    #    unpacked_list[-2].primer_reverse = reverse_complement(unpacked_list[-2].sequence[-40:] + unpacked_list[-1].sequence[:unpacked_list[-1].sequence.find(gg_opt[-2-bsa_len])] + gg_opt[-2-bsa_len] + "agagaccaa")
-                                    #    unpacked_list[-1].primer_forward = "aaggtctca" + unpacked_list[-1].sequence[unpacked_list[-1].sequence.find(gg_opt[-2-bsa_len]):unpacked_list[-1].sequence.find(gg_opt[-2-bsa_len])+40]
-                                    #    unpacked_list[-2].sequence = unpacked_list[-2].sequence + unpacked_list[-1].sequence[:unpacked_list[-1].sequence.find(gg_opt[-2-bsa_len])] + gg_opt[-2-bsa_len] + "agagaccaa"
-                                    #    unpacked_list[-1].sequence = "aaggtctca" + unpacked_list[-1].sequence[unpacked_list[-1].sequence.find(gg_opt[-2-bsa_len]):]
-                                    #elif gg_opt[-2-bsa_len] in unpacked_list[-2].sequence[-35:]:
-                                    #    unpacked_list[-2].primer_reverse = reverse_complement(unpacked_list[-2].sequence[unpacked_list[-2].sequence.find(gg_opt[-2-bsa_len],len(unpacked_list[-2].sequence)-35)-40:unpacked_list[-2].sequence.find(gg_opt[-2-bsa_len],len(unpacked_list[-2].sequence)-35)] + gg_opt[-2-bsa_len] + "agagaccaa")
-                                    #    unpacked_list[-1].primer_forward = "aaggtctca" + unpacked_list[-2].sequence[unpacked_list[-2].sequence.find(gg_opt[-2-bsa_len],len(unpacked_list[-2].sequence)-35):] + unpacked_list[-1].sequence[:40]
-                                    #    unpacked_list[-1].sequence = "aaggtctca" + unpacked_list[-2].sequence[unpacked_list[-2].sequence.find(gg_opt[-2-bsa_len],len(unpacked_list[-2].sequence)-35):] + unpacked_list[-1].sequence
-                                    #    unpacked_list[-2].sequence = unpacked_list[-2].sequence[:unpacked_list[-2].sequence.find(gg_opt[-2-bsa_len],len(unpacked_list[-2].sequence)-35)] + gg_opt[-2-bsa_len] + "agagaccaa"
-                                    #else:
-                                    #    pass
-                            elif i == len(unpacked_list)-1:
-                                if gg_opt[-1-bsa_len] in new_backbone_sequence[:35]:
-                                    unpacked_list[-1].primer_reverse = reverse_complement(unpacked_list[-1].sequence[-40:] + new_backbone_sequence[9:new_backbone_sequence.find(gg_opt[-1-bsa_len])] + gg_opt[-1-bsa_len] + "agagaccaa")
-                                    unpacked_list[-1].sequence = unpacked_list[-1].sequence + new_backbone_sequence[:new_backbone_sequence.find(gg_opt[-1-bsa_len])] + gg_opt[-1-bsa_len] + "agagaccaa"
-                                    new_backbone_sequence = "aaggtctca" + new_backbone_sequence[new_backbone_sequence.find(gg_opt[-1-bsa_len]):]
-                                elif gg_opt[-1-bsa_len] in unpacked_list[-1].sequence[-35:]:
-                                    new_backbone_sequence = "aaggtctca" + unpacked_list[-1].sequence[unpacked_list[-1].sequence.find(gg_opt[-1-bsa_len],len(unpacked_list[-1].sequence)-35):] + new_backbone_sequence
-                                    unpacked_list[-1].primer_reverse = reverse_complement(unpacked_list[-1].sequence[unpacked_list[-1].sequence.find(gg_opt[-1-bsa_len],len(unpacked_list[-1].sequence)-35)-40:unpacked_list[-1].sequence.find(gg_opt[-1-bsa_len],len(unpacked_list[-1].sequence)-35)] + gg_opt[-1-bsa_len] + "agagaccaa")
-                                    unpacked_list[-1].sequence = unpacked_list[-1].sequence[:unpacked_list[-1].sequence.find(gg_opt[-1-bsa_len],len(unpacked_list[-1].sequence)-35)] + gg_opt[-1-bsa_len] + "agagaccaa"
+                                    if gg_opt[-2-bsa_len] in unpacked_list[-1].sequence[:35]:
+                                        unpacked_list[-2].primer_reverse = reverse_complement(unpacked_list[-2].sequence[-40:] + unpacked_list[-1].sequence[:unpacked_list[-1].sequence.find(gg_opt[-2-bsa_len])] + gg_opt[-2-bsa_len] + "agagaccaa")
+                                        unpacked_list[-1].primer_forward = "aaggtctca" + unpacked_list[-1].sequence[unpacked_list[-1].sequence.find(gg_opt[-2-bsa_len]):unpacked_list[-1].sequence.find(gg_opt[-2-bsa_len])+40]
+                                        unpacked_list[-2].sequence = unpacked_list[-2].sequence + unpacked_list[-1].sequence[:unpacked_list[-1].sequence.find(gg_opt[-2-bsa_len])] + gg_opt[-2-bsa_len] + "agagaccaa"
+                                        unpacked_list[-1].sequence = "aaggtctca" + unpacked_list[-1].sequence[unpacked_list[-1].sequence.find(gg_opt[-2-bsa_len]):]
+                                    elif gg_opt[-2-bsa_len] in unpacked_list[-2].sequence[-35:]:
+                                        unpacked_list[-2].primer_reverse = reverse_complement(unpacked_list[-2].sequence[unpacked_list[-2].sequence.find(gg_opt[-2-bsa_len],len(unpacked_list[-2].sequence)-35)-40:unpacked_list[-2].sequence.find(gg_opt[-2-bsa_len],len(unpacked_list[-2].sequence)-35)] + gg_opt[-2-bsa_len] + "agagaccaa")
+                                        unpacked_list[-1].primer_forward = "aaggtctca" + unpacked_list[-2].sequence[unpacked_list[-2].sequence.find(gg_opt[-2-bsa_len],len(unpacked_list[-2].sequence)-35):] + unpacked_list[-1].sequence[:40]
+                                        unpacked_list[-1].sequence = "aaggtctca" + unpacked_list[-2].sequence[unpacked_list[-2].sequence.find(gg_opt[-2-bsa_len],len(unpacked_list[-2].sequence)-35):] + unpacked_list[-1].sequence
+                                        unpacked_list[-2].sequence = unpacked_list[-2].sequence[:unpacked_list[-2].sequence.find(gg_opt[-2-bsa_len],len(unpacked_list[-2].sequence)-35)] + gg_opt[-2-bsa_len] + "agagaccaa"
+                                    else:
+                                        pass
                                 else:
-                                    pass
-                                if gg_opt[-2-bsa_len] in unpacked_list[-1].sequence[:35]:
-                                    unpacked_list[-2].primer_reverse = reverse_complement(unpacked_list[-2].sequence[-40:] + unpacked_list[-1].sequence[:unpacked_list[-1].sequence.find(gg_opt[-2-bsa_len])] + gg_opt[-2-bsa_len] + "agagaccaa")
-                                    unpacked_list[-1].primer_forward = "aaggtctca" + unpacked_list[-1].sequence[unpacked_list[-1].sequence.find(gg_opt[-2-bsa_len]):unpacked_list[-1].sequence.find(gg_opt[-2-bsa_len])+40]
-                                    unpacked_list[-2].sequence = unpacked_list[-2].sequence + unpacked_list[-1].sequence[:unpacked_list[-1].sequence.find(gg_opt[-2-bsa_len])] + gg_opt[-2-bsa_len] + "agagaccaa"
-                                    unpacked_list[-1].sequence = "aaggtctca" + unpacked_list[-1].sequence[unpacked_list[-1].sequence.find(gg_opt[-2-bsa_len]):]
-                                elif gg_opt[-2-bsa_len] in unpacked_list[-2].sequence[-35:]:
-                                    unpacked_list[-2].primer_reverse = reverse_complement(unpacked_list[-2].sequence[unpacked_list[-2].sequence.find(gg_opt[-2-bsa_len],len(unpacked_list[-2].sequence)-35)-40:unpacked_list[-2].sequence.find(gg_opt[-2-bsa_len],len(unpacked_list[-2].sequence)-35)] + gg_opt[-2-bsa_len] + "agagaccaa")
-                                    unpacked_list[-1].primer_forward = "aaggtctca" + unpacked_list[-2].sequence[unpacked_list[-2].sequence.find(gg_opt[-2-bsa_len],len(unpacked_list[-2].sequence)-35):] + unpacked_list[-1].sequence[:40]
-                                    unpacked_list[-1].sequence = "aaggtctca" + unpacked_list[-2].sequence[unpacked_list[-2].sequence.find(gg_opt[-2-bsa_len],len(unpacked_list[-2].sequence)-35):] + unpacked_list[-1].sequence
-                                    unpacked_list[-2].sequence = unpacked_list[-2].sequence[:unpacked_list[-2].sequence.find(gg_opt[-2-bsa_len],len(unpacked_list[-2].sequence)-35)] + gg_opt[-2-bsa_len] + "agagaccaa"
+                                    if gg_opt[i] in unpacked_list[i].sequence[:35]:
+                                        unpacked_list[i-1].primer_reverse = reverse_complement(unpacked_list[i-1].sequence[-40:] + unpacked_list[i].sequence[:unpacked_list[i].sequence.find(gg_opt[i])] + gg_opt[i] + "agagaccaa")
+                                        unpacked_list[i].primer_forward = "aaggtctca" + unpacked_list[i].sequence[unpacked_list[i].sequence.find(gg_opt[i]):unpacked_list[i].sequence.find(gg_opt[i])+40]
+                                        unpacked_list[i-1].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence[:unpacked_list[i].sequence.find(gg_opt[i])] + gg_opt[i] + "agagaccaa"
+                                        unpacked_list[i].sequence = "aaggtctca" + unpacked_list[i].sequence[unpacked_list[i].sequence.find(gg_opt[i]):]
+                                    elif gg_opt[i] in unpacked_list[i-1].sequence[-35:]:
+                                        unpacked_list[i-1].primer_reverse = reverse_complement(unpacked_list[i-1].sequence[unpacked_list[i-1].sequence.find(gg_opt[i],len(unpacked_list[i-1].sequence)-35)-40:unpacked_list[i-1].sequence.find(gg_opt[i],len(unpacked_list[i-1].sequence)-35)] + gg_opt[i] + "agagaccaa")
+                                        unpacked_list[i].primer_forward = "aaggtctca" + unpacked_list[i-1].sequence[unpacked_list[i-1].sequence.find(gg_opt[i],len(unpacked_list[i-1].sequence)-35):] + unpacked_list[i].sequence[:40]
+                                        unpacked_list[i].sequence = "aaggtctca" + unpacked_list[i-1].sequence[unpacked_list[i-1].sequence.find(gg_opt[i],len(unpacked_list[i-1].sequence)-35):] + unpacked_list[i].sequence
+                                        unpacked_list[i-1].sequence = unpacked_list[i-1].sequence[:unpacked_list[i-1].sequence.find(gg_opt[i],len(unpacked_list[i-1].sequence)-35)] + gg_opt[i] + "agagaccaa"
+                                    else:
+                                        pass
+                            #Then, remove internal BsaI sites
+                            for i in range(len(unpacked_list)):
+                                if golden_gate_error != "" or remove_bsaI == "no":
+                                    break
+                                if unpacked_list[i] in bsaI_removal_key:
+                                    bsa_index = []
+                                    ii=0
+                                    while len(bsa_index) != (unpacked_list[i].sequence.count("ggtctc")+unpacked_list[i].sequence.count("gagacc"))-2 and ii<10*len(unpacked_list):
+                                        if "ggtctc" in unpacked_list[i].sequence[13:] and "gagacc" not in unpacked_list[i].sequence[:len(unpacked_list[i].sequence)-13]:
+                                            if bsa_index == []:
+                                                bsa_index.append(unpacked_list[i].sequence.find("ggtctc",13))
+                                            else:
+                                                bsa_index.append(unpacked_list[i].sequence.find("ggtctc",bsa_index[-1]+1))
+                                        elif "gagacc" in unpacked_list[i].sequence[:len(unpacked_list[i].sequence)-13] and "ggtctc" not in unpacked_list[i].sequence[13:]:
+                                            if bsa_index == []:
+                                                bsa_index.append(unpacked_list[i].sequence.find("gagacc",0,len(unpacked_list[i].sequence)-13))
+                                            else:
+                                                bsa_index.append(unpacked_list[i].sequence.find("gagacc",bsa_index[-1]+1))
+                                        elif "ggtctc" in unpacked_list[i].sequence[13:] and "gagacc" in unpacked_list[i].sequence[:len(unpacked_list[i].sequence)-13]:
+                                            if bsa_index == []:
+                                                bsa_index.append(min(unpacked_list[i].sequence.find("ggtctc",13),unpacked_list[i].sequence.find("gagacc",0,len(unpacked_list[i].sequence)-13)))
+                                            else:
+                                                bsa_index.append(min(unpacked_list[i].sequence.find("ggtctc",bsa_index[-1]+1),unpacked_list[i].sequence.find("gagacc",bsa_index[-1]+1)))
+                                        ii+=1
+                                    for x in range(bsaI_removal_key.count(unpacked_list[i])):
+                                        part_index = bsaI_removal_key.index(unpacked_list[i])+x
+                                        overhang = gg_opt[len(unpacked_list)+1+part_index]
+                                        if x == 0:
+                                            if bsa_index[x]-30 < 0:
+                                                if overhang in unpacked_list[i].sequence[0:bsa_index[x]]:
+                                                    overhang_index = unpacked_list[i].sequence.find(overhang,0,bsa_index[x])
+                                                    new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"a",unpacked_list[i].type,unpacked_list[i].sequence[:overhang_index]+overhang+"agagaccaa"))
+                                                    new_unpacked_list[-1].primer_forward = unpacked_list[i].primer_forward
+                                                    new_unpacked_list[-1].primer_reverse = reverse_complement(unpacked_list[i].sequence[overhang_index-40:overhang_index]+overhang+"agagaccaa")
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    if len(bsa_index)>x+1:
+                                                        for q in range(x+1,len(bsa_index)):
+                                                            bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
+                                                    new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"b",unpacked_list[i].type,"aaggtctca"+silent_mut(unpacked_list[i].sequence[overhang_index:],bsa_index[x]-overhang_index,unpacked_list[i].type)))
+                                                    new_unpacked_list[-1].primer_forward = "aaggtctca" + silent_mut(unpacked_list[i].sequence[overhang_index:],bsa_index[x]-overhang_index,unpacked_list[i].type)[:44]
+                                                    new_unpacked_list[-1].primer_reverse = unpacked_list[i].primer_reverse
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                elif overhang in unpacked_list[i].sequence[bsa_index[x]+6:bsa_index[x]+37]:
+                                                    overhang_index = unpacked_list[i].sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
+                                                    new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"a",unpacked_list[i].type,silent_mut(unpacked_list[i].sequence[:overhang_index],bsa_index[x],unpacked_list[i].type)+overhang+"agagaccaa"))
+                                                    new_unpacked_list[-1].primer_forward = unpacked_list[i].primer_forward
+                                                    new_unpacked_list[-1].primer_reverse = reverse_complement(silent_mut(unpacked_list[i].sequence[:overhang_index],bsa_index[x],unpacked_list[i].type)[-40:]+overhang+"agagaccaa")
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    if len(bsa_index)>x+1:
+                                                        for q in range(x+1,len(bsa_index)):
+                                                            bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
+                                                    new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"b",unpacked_list[i].type,"aaggtctca"+unpacked_list[i].sequence[overhang_index:]))
+                                                    new_unpacked_list[-1].primer_forward = "aaggtctca" + unpacked_list[i].sequence[overhang_index:overhang_index+44]
+                                                    new_unpacked_list[-1].primer_reverse = unpacked_list[i].primer_reverse
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                else:
+                                                    pass
+                                            else:
+                                                if overhang in unpacked_list[i].sequence[bsa_index[x]-30:bsa_index[x]]:
+                                                    overhang_index = unpacked_list[i].sequence.find(overhang,bsa_index[x]-30,bsa_index[x])
+                                                    new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"a",unpacked_list[i].type,unpacked_list[i].sequence[:overhang_index]+overhang+"agagaccaa"))
+                                                    new_unpacked_list[-1].primer_forward = unpacked_list[i].primer_forward
+                                                    new_unpacked_list[-1].primer_reverse = reverse_complement(unpacked_list[i].sequence[overhang_index-40:overhang_index]+overhang+"agagaccaa")
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    if len(bsa_index)>x+1:
+                                                        for q in range(x+1,len(bsa_index)):
+                                                            bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
+                                                    new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"b",unpacked_list[i].type,"aaggtctca"+silent_mut(unpacked_list[i].sequence[overhang_index:],bsa_index[x]-overhang_index,unpacked_list[i].type)))
+                                                    new_unpacked_list[-1].primer_forward = "aaggtctca" + silent_mut(unpacked_list[i].sequence[overhang_index:],bsa_index[x]-overhang_index,unpacked_list[i].type)[:44]
+                                                    new_unpacked_list[-1].primer_reverse = unpacked_list[i].primer_reverse
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                elif overhang in unpacked_list[i].sequence[bsa_index[x]+6:bsa_index[x]+37]:
+                                                    overhang_index = unpacked_list[i].sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
+                                                    new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"a",unpacked_list[i].type,silent_mut(unpacked_list[i].sequence[:overhang_index],bsa_index[x],unpacked_list[i].type)+overhang+"agagaccaa"))
+                                                    new_unpacked_list[-1].primer_forward = unpacked_list[i].primer_forward
+                                                    new_unpacked_list[-1].primer_reverse = reverse_complement(silent_mut(unpacked_list[i].sequence[:overhang_index],bsa_index[x],unpacked_list[i].type)[-40:]+overhang+"agagaccaa")
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    if len(bsa_index)>x+1:
+                                                        for q in range(x+1,len(bsa_index)):
+                                                            bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
+                                                    new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"b",unpacked_list[i].type,"aaggtctca"+unpacked_list[i].sequence[overhang_index:]))
+                                                    new_unpacked_list[-1].primer_forward = "aaggtctca" + unpacked_list[i].sequence[overhang_index:overhang_index+44]
+                                                    new_unpacked_list[-1].primer_reverse = unpacked_list[i].primer_reverse
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                else:
+                                                    pass
+                                        else:
+                                            if bsa_index[x]-30 < 0:
+                                                if overhang in new_unpacked_list[-1].sequence[0:bsa_index[x]]:
+                                                    overhang_index = new_unpacked_list[-1].sequence.find(overhang,0,bsa_index[x])
+                                                    new_unpacked_list.append(Part(new_unpacked_list[-1].name+"-"+str(x+1)+"a",new_unpacked_list[-1].type,new_unpacked_list[-1].sequence[:overhang_index]+overhang+"agagaccaa"))
+                                                    new_unpacked_list[-1].primer_forward = new_unpacked_list[-2].primer_forward
+                                                    new_unpacked_list[-1].primer_reverse = reverse_complement(new_unpacked_list[-2].sequence[overhang_index-40:overhang_index]+overhang+"agagaccaa")
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    if len(bsa_index)>x+1:
+                                                        for q in range(x+1,len(bsa_index)):
+                                                            bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
+                                                    new_unpacked_list.append(Part(new_unpacked_list[-2].name+"-"+str(x+1)+"b",new_unpacked_list[-2].type,"aaggtctca"+silent_mut(new_unpacked_list[-2].sequence[overhang_index:],bsa_index[x]-overhang_index,new_unpacked_list[-2].type)))
+                                                    new_unpacked_list[-1].primer_forward = "aaggtctca" + silent_mut(new_unpacked_list[-3].sequence[overhang_index:],bsa_index[x]-overhang_index,new_unpacked_list[-3].type)[:44]
+                                                    new_unpacked_list[-1].primer_reverse = new_unpacked_list[-3].primer_reverse
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    del new_unpacked_list[-3]
+                                                elif overhang in new_unpacked_list[-1].sequence[bsa_index[x]+6:bsa_index[x]+37]:
+                                                    overhang_index = new_unpacked_list[-1].sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
+                                                    new_unpacked_list.append(Part(new_unpacked_list[-1].name+"-"+str(x+1)+"a",new_unpacked_list[-1].type,silent_mut(new_unpacked_list[-1].sequence[:overhang_index],bsa_index[x],new_unpacked_list[-1].type)+overhang+"agagaccaa"))
+                                                    new_unpacked_list[-1].primer_forward = new_unpacked_list[-2].primer_forward
+                                                    new_unpacked_list[-1].primer_reverse = reverse_complement(silent_mut(new_unpacked_list[-2].sequence[:overhang_index],bsa_index[x],new_unpacked_list[-2].type)[-40:]+overhang+"agagaccaa")
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    if len(bsa_index)>x+1:
+                                                        for q in range(x+1,len(bsa_index)):
+                                                            bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
+                                                    new_unpacked_list.append(Part(new_unpacked_list[-2].name+"-"+str(x+1)+"b",new_unpacked_list[-2].type,"aaggtctca"+new_unpacked_list[-2].sequence[overhang_index:]))
+                                                    new_unpacked_list[-1].primer_forward = "aaggtctca" + new_unpacked_list[-3].sequence[overhang_index:overhang_index+44]
+                                                    new_unpacked_list[-1].primer_reverse = new_unpacked_list[-3].primer_reverse
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    del new_unpacked_list[-3]
+                                                else:
+                                                    pass
+                                            else:
+                                                if overhang in new_unpacked_list[-1].sequence[bsa_index[x]-30:bsa_index[x]]:
+                                                    overhang_index = new_unpacked_list[-1].sequence.find(overhang,bsa_index[x]-30,bsa_index[x])
+                                                    new_unpacked_list.append(Part(new_unpacked_list[-1].name+"-"+str(x+1)+"a",new_unpacked_list[-1].type,new_unpacked_list[-1].sequence[:overhang_index]+overhang+"agagaccaa"))
+                                                    new_unpacked_list[-1].primer_forward = new_unpacked_list[-2].primer_forward
+                                                    new_unpacked_list[-1].primer_reverse = reverse_complement(new_unpacked_list[-2].sequence[overhang_index-40:overhang_index]+overhang+"agagaccaa")
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    if len(bsa_index)>x+1:
+                                                        for q in range(x+1,len(bsa_index)):
+                                                            bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
+                                                    new_unpacked_list.append(Part(new_unpacked_list[-2].name+"-"+str(x+1)+"b",new_unpacked_list[-2].type,"aaggtctca"+silent_mut(new_unpacked_list[-2].sequence[overhang_index:],bsa_index[x]-overhang_index,new_unpacked_list[-2].type)))
+                                                    new_unpacked_list[-1].primer_forward = "aaggtctca" + silent_mut(new_unpacked_list[-3].sequence[overhang_index:],bsa_index[x]-overhang_index,new_unpacked_list[-3].type)[:44]
+                                                    new_unpacked_list[-1].primer_reverse = new_unpacked_list[-3].primer_reverse
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    del new_unpacked_list[-3]
+                                                elif overhang in new_unpacked_list[-1].sequence[bsa_index[x]+6:bsa_index[x]+37]:
+                                                    overhang_index = new_unpacked_list[-1].sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
+                                                    new_unpacked_list.append(Part(new_unpacked_list[-1].name+"-"+str(x+1)+"a",new_unpacked_list[-1].type,silent_mut(new_unpacked_list[-1].sequence[:overhang_index],bsa_index[x],new_unpacked_list[-1].type)+overhang+"agagaccaa"))
+                                                    new_unpacked_list[-1].primer_forward = new_unpacked_list[-2].primer_forward
+                                                    new_unpacked_list[-1].primer_reverse = reverse_complement(silent_mut(new_unpacked_list[-2].sequence[:overhang_index],bsa_index[x],new_unpacked_list[-2].type)[-40:]+overhang+"agagaccaa")
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    if len(bsa_index)>x+1:
+                                                        for q in range(x+1,len(bsa_index)):
+                                                            bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
+                                                    new_unpacked_list.append(Part(new_unpacked_list[-2].name+"-"+str(x+1)+"b",new_unpacked_list[-2].type,"aaggtctca"+new_unpacked_list[-2].sequence[overhang_index:]))
+                                                    new_unpacked_list[-1].primer_forward = "aaggtctca" + new_unpacked_list[-3].sequence[overhang_index:overhang_index+44]
+                                                    new_unpacked_list[-1].primer_reverse = new_unpacked_list[-3].primer_reverse
+                                                    new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                    del new_unpacked_list[-3]
+                                                else:
+                                                    pass
                                 else:
-                                    pass
-                            else:
-                                if gg_opt[i] in unpacked_list[i].sequence[:35]:
-                                    unpacked_list[i-1].primer_reverse = reverse_complement(unpacked_list[i-1].sequence[-40:] + unpacked_list[i].sequence[:unpacked_list[i].sequence.find(gg_opt[i])] + gg_opt[i] + "agagaccaa")
-                                    unpacked_list[i].primer_forward = "aaggtctca" + unpacked_list[i].sequence[unpacked_list[i].sequence.find(gg_opt[i]):unpacked_list[i].sequence.find(gg_opt[i])+40]
-                                    unpacked_list[i-1].sequence = unpacked_list[i-1].sequence + unpacked_list[i].sequence[:unpacked_list[i].sequence.find(gg_opt[i])] + gg_opt[i] + "agagaccaa"
-                                    unpacked_list[i].sequence = "aaggtctca" + unpacked_list[i].sequence[unpacked_list[i].sequence.find(gg_opt[i]):]
-                                elif gg_opt[i] in unpacked_list[i-1].sequence[-35:]:
-                                    unpacked_list[i-1].primer_reverse = reverse_complement(unpacked_list[i-1].sequence[unpacked_list[i-1].sequence.find(gg_opt[i],len(unpacked_list[i-1].sequence)-35)-40:unpacked_list[i-1].sequence.find(gg_opt[i],len(unpacked_list[i-1].sequence)-35)] + gg_opt[i] + "agagaccaa")
-                                    unpacked_list[i].primer_forward = "aaggtctca" + unpacked_list[i-1].sequence[unpacked_list[i-1].sequence.find(gg_opt[i],len(unpacked_list[i-1].sequence)-35):] + unpacked_list[i].sequence[:40]
-                                    unpacked_list[i].sequence = "aaggtctca" + unpacked_list[i-1].sequence[unpacked_list[i-1].sequence.find(gg_opt[i],len(unpacked_list[i-1].sequence)-35):] + unpacked_list[i].sequence
-                                    unpacked_list[i-1].sequence = unpacked_list[i-1].sequence[:unpacked_list[i-1].sequence.find(gg_opt[i],len(unpacked_list[i-1].sequence)-35)] + gg_opt[i] + "agagaccaa"
-                                else:
-                                    pass
-                        for i in range(len(unpacked_list)):
-                            if golden_gate_error != "" or remove_bsaI == "no":
-                                break
-                            if unpacked_list[i] in bsaI_removal_key:
+                                    new_unpacked_list.append(unpacked_list[i])
+                            #Remove BsaI sites internal in backbone sequence
+                            if "backbone" in bsaI_removal_key:
                                 bsa_index = []
                                 ii=0
-                                while len(bsa_index) != (unpacked_list[i].sequence.count("ggtctc")+unpacked_list[i].sequence.count("gagacc"))-2 and ii<10*len(unpacked_list):
-                                    if "ggtctc" in unpacked_list[i].sequence[13:] and "gagacc" not in unpacked_list[i].sequence[:len(unpacked_list[i].sequence)-13]:
+                                while len(bsa_index) != (new_backbone_sequence.count("ggtctc")+new_backbone_sequence.count("gagacc"))-2 and ii<10:
+                                    if "ggtctc" in new_backbone_sequence[13:] and "gagacc" not in new_backbone_sequence[:len(new_backbone_sequence)-13]:
                                         if bsa_index == []:
-                                            bsa_index.append(unpacked_list[i].sequence.find("ggtctc",13))
+                                            bsa_index.append(new_backbone_sequence.find("ggtctc",13))
                                         else:
-                                            bsa_index.append(unpacked_list[i].sequence.find("ggtctc",bsa_index[-1]+1))
-                                    elif "gagacc" in unpacked_list[i].sequence[:len(unpacked_list[i].sequence)-13] and "ggtctc" not in unpacked_list[i].sequence[13:]:
+                                            bsa_index.append(new_backbone_sequence.find("ggtctc",bsa_index[-1]+1))
+                                    elif "gagacc" in new_backbone_sequence[:len(new_backbone_sequence)-13] and "ggtctc" not in new_backbone_sequence[13:]:
                                         if bsa_index == []:
-                                            bsa_index.append(unpacked_list[i].sequence.find("gagacc",0,len(unpacked_list[i].sequence)-13))
+                                            bsa_index.append(new_backbone_sequence.find("gagacc",0,len(new_backbone_sequence)-13))
                                         else:
-                                            bsa_index.append(unpacked_list[i].sequence.find("gagacc",bsa_index[-1]+1))
-                                    elif "ggtctc" in unpacked_list[i].sequence[13:] and "gagacc" in unpacked_list[i].sequence[:len(unpacked_list[i].sequence)-13]:
+                                            bsa_index.append(new_backbone_sequence.find("gagacc",bsa_index[-1]+1))
+                                    elif "ggtctc" in new_backbone_sequence[13:] and "gagacc" in new_backbone_sequence[:len(new_backbone_sequence)-13]:
                                         if bsa_index == []:
-                                            bsa_index.append(min(unpacked_list[i].sequence.find("ggtctc",13),unpacked_list[i].sequence.find("gagacc",0,len(unpacked_list[i].sequence)-13)))
+                                            bsa_index.append(min(new_backbone_sequence.find("ggtctc",13),new_backbone_sequence.find("gagacc",0,len(new_backbone_sequence)-13)))
                                         else:
-                                            bsa_index.append(min(unpacked_list[i].sequence.find("ggtctc",bsa_index[-1]+1),unpacked_list[i].sequence.find("gagacc",bsa_index[-1]+1)))
+                                            bsa_index.append(min(new_backbone_sequence.find("ggtctc",bsa_index[-1]+1),new_backbone_sequence.find("gagacc",bsa_index[-1]+1)))
                                     ii+=1
-                                for x in range(bsaI_removal_key.count(unpacked_list[i])):
-                                    part_index = bsaI_removal_key.index(unpacked_list[i])+x
+                                backbone_list = []
+                                new_backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
+                                for x in range(bsaI_removal_key.count("backbone")):
+                                    backbone_list.append([])
+                                    backbone_list.append([])
+                                    part_index = bsaI_removal_key.index("backbone")+x
                                     overhang = gg_opt[len(unpacked_list)+1+part_index]
                                     if x == 0:
                                         if bsa_index[x]-30 < 0:
-                                            if overhang in unpacked_list[i].sequence[0:bsa_index[x]]:
-                                                overhang_index = unpacked_list[i].sequence.find(overhang,0,bsa_index[x])
-                                                new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"a",unpacked_list[i].type,unpacked_list[i].sequence[:overhang_index]+overhang+"agagaccaa"))
-                                                new_unpacked_list[-1].primer_forward = unpacked_list[i].primer_forward
-                                                new_unpacked_list[-1].primer_reverse = reverse_complement(unpacked_list[i].sequence[overhang_index-40:overhang_index]+overhang+"agagaccaa")
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                            if overhang in new_backbone_sequence[0:bsa_index[x]]:
+                                                overhang_index = new_backbone_sequence.find(overhang,0,bsa_index[x])
+                                                backbone_list[-2].append(new_backbone_sequence[:overhang_index]+overhang+"agagaccaa")
+                                                backbone_list[-2].append(new_backbone_primers[0])
+                                                backbone_list[-2].append(reverse_complement(new_backbone_sequence[overhang_index-40:overhang_index]+overhang+"agagaccaa"))
                                                 if len(bsa_index)>x+1:
                                                     for q in range(x+1,len(bsa_index)):
-                                                        bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
-                                                new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"b",unpacked_list[i].type,"aaggtctca"+silent_mut(unpacked_list[i].sequence[overhang_index:],bsa_index[x]-overhang_index,unpacked_list[i].type)))
-                                                new_unpacked_list[-1].primer_forward = "aaggtctca" + silent_mut(unpacked_list[i].sequence[overhang_index:],bsa_index[x]-overhang_index,unpacked_list[i].type)[:44]
-                                                new_unpacked_list[-1].primer_reverse = unpacked_list[i].primer_reverse
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                            elif overhang in unpacked_list[i].sequence[bsa_index[x]+6:bsa_index[x]+37]:
-                                                overhang_index = unpacked_list[i].sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
-                                                new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"a",unpacked_list[i].type,silent_mut(unpacked_list[i].sequence[:overhang_index],bsa_index[x],unpacked_list[i].type)+overhang+"agagaccaa"))
-                                                new_unpacked_list[-1].primer_forward = unpacked_list[i].primer_forward
-                                                new_unpacked_list[-1].primer_reverse = reverse_complement(silent_mut(unpacked_list[i].sequence[:overhang_index],bsa_index[x],unpacked_list[i].type)[-40:]+overhang+"agagaccaa")
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                        bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
+                                                backbone_list[-1].append("aaggtctca"+silent_mut(new_backbone_sequence[overhang_index:],bsa_index[x]-overhang_index,"CDS"))
+                                                backbone_list[-1].append("aaggtctca" + silent_mut(new_backbone_sequence[overhang_index:],bsa_index[x]-overhang_index,"CDS")[:44])
+                                                backbone_list[-1].append(new_backbone_primers[1])
+                                            elif overhang in new_backbone_sequence[bsa_index[x]+6:bsa_index[x]+37]:
+                                                overhang_index = new_backbone_sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
+                                                backbone_list[-2].append(silent_mut(new_backbone_sequence[:overhang_index],bsa_index[x],"CDS")+overhang+"agagaccaa")
+                                                backbone_list[-2].append(new_backbone_primers[0])
+                                                backbone_list[-2].append(reverse_complement(silent_mut(new_backbone_sequence[:overhang_index],bsa_index[x],"CDS")[-40:]+overhang+"agagaccaa"))
                                                 if len(bsa_index)>x+1:
                                                     for q in range(x+1,len(bsa_index)):
-                                                        bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
-                                                new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"b",unpacked_list[i].type,"aaggtctca"+unpacked_list[i].sequence[overhang_index:]))
-                                                new_unpacked_list[-1].primer_forward = "aaggtctca" + unpacked_list[i].sequence[overhang_index:overhang_index+44]
-                                                new_unpacked_list[-1].primer_reverse = unpacked_list[i].primer_reverse
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                        bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
+                                                backbone_list[-1].append("aaggtctca"+new_backbone_sequence[overhang_index:])
+                                                backbone_list[-1].append("aaggtctca" + new_backbone_sequence[overhang_index:overhang_index+44])
+                                                backbone_list[-1].append(new_backbone_primers[1])
                                             else:
                                                 pass
                                         else:
-                                            if overhang in unpacked_list[i].sequence[bsa_index[x]-30:bsa_index[x]]:
-                                                overhang_index = unpacked_list[i].sequence.find(overhang,bsa_index[x]-30,bsa_index[x])
-                                                new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"a",unpacked_list[i].type,unpacked_list[i].sequence[:overhang_index]+overhang+"agagaccaa"))
-                                                new_unpacked_list[-1].primer_forward = unpacked_list[i].primer_forward
-                                                new_unpacked_list[-1].primer_reverse = reverse_complement(unpacked_list[i].sequence[overhang_index-40:overhang_index]+overhang+"agagaccaa")
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                            if overhang in new_backbone_sequence[bsa_index[x]-30:bsa_index[x]]:
+                                                overhang_index = new_backbone_sequence.find(overhang,bsa_index[x]-30,bsa_index[x])
+                                                backbone_list[-2].append(new_backbone_sequence[:overhang_index]+overhang+"agagaccaa")
+                                                backbone_list[-2].append(new_backbone_primers[0])
+                                                backbone_list[-2].append(reverse_complement(new_backbone_sequence[overhang_index-40:overhang_index]+overhang+"agagaccaa"))
                                                 if len(bsa_index)>x+1:
                                                     for q in range(x+1,len(bsa_index)):
-                                                        bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
-                                                new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"b",unpacked_list[i].type,"aaggtctca"+silent_mut(unpacked_list[i].sequence[overhang_index:],bsa_index[x]-overhang_index,unpacked_list[i].type)))
-                                                new_unpacked_list[-1].primer_forward = "aaggtctca" + silent_mut(unpacked_list[i].sequence[overhang_index:],bsa_index[x]-overhang_index,unpacked_list[i].type)[:44]
-                                                new_unpacked_list[-1].primer_reverse = unpacked_list[i].primer_reverse
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                            elif overhang in unpacked_list[i].sequence[bsa_index[x]+6:bsa_index[x]+37]:
-                                                overhang_index = unpacked_list[i].sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
-                                                new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"a",unpacked_list[i].type,silent_mut(unpacked_list[i].sequence[:overhang_index],bsa_index[x],unpacked_list[i].type)+overhang+"agagaccaa"))
-                                                new_unpacked_list[-1].primer_forward = unpacked_list[i].primer_forward
-                                                new_unpacked_list[-1].primer_reverse = reverse_complement(silent_mut(unpacked_list[i].sequence[:overhang_index],bsa_index[x],unpacked_list[i].type)[-40:]+overhang+"agagaccaa")
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                        bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
+                                                backbone_list[-1].append("aaggtctca"+silent_mut(new_backbone_sequence[overhang_index:],bsa_index[x]-overhang_index,"CDS"))
+                                                backbone_list[-1].append("aaggtctca" + silent_mut(new_backbone_sequence[overhang_index:],bsa_index[x]-overhang_index,"CDS")[:44])
+                                                backbone_list[-1].append(new_backbone_primers[1])
+                                            elif overhang in new_backbone_sequence[bsa_index[x]+6:bsa_index[x]+37]:
+                                                overhang_index = new_backbone_sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
+                                                backbone_list[-2].append(silent_mut(new_backbone_sequence[:overhang_index],bsa_index[x],"CDS")+overhang+"agagaccaa")
+                                                backbone_list[-2].append(new_backbone_primers[0])
+                                                backbone_list[-2].append(reverse_complement(silent_mut(new_backbone_sequence[:overhang_index],bsa_index[x],"CDS")[-40:]+overhang+"agagaccaa"))
                                                 if len(bsa_index)>x+1:
                                                     for q in range(x+1,len(bsa_index)):
-                                                        bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
-                                                new_unpacked_list.append(Part(unpacked_list[i].name+"-"+str(x+1)+"b",unpacked_list[i].type,"aaggtctca"+unpacked_list[i].sequence[overhang_index:]))
-                                                new_unpacked_list[-1].primer_forward = "aaggtctca" + unpacked_list[i].sequence[overhang_index:overhang_index+44]
-                                                new_unpacked_list[-1].primer_reverse = unpacked_list[i].primer_reverse
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                        bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
+                                                backbone_list[-1].append("aaggtctca"+new_backbone_sequence[overhang_index:])
+                                                backbone_list[-1].append("aaggtctca" + new_backbone_sequence[overhang_index:overhang_index+44])
+                                                backbone_list[-1].append(new_backbone_primers[1])
                                             else:
                                                 pass
                                     else:
                                         if bsa_index[x]-30 < 0:
-                                            if overhang in new_unpacked_list[-1].sequence[0:bsa_index[x]]:
-                                                overhang_index = new_unpacked_list[-1].sequence.find(overhang,0,bsa_index[x])
-                                                new_unpacked_list.append(Part(new_unpacked_list[-1].name+"-"+str(x+1)+"a",new_unpacked_list[-1].type,new_unpacked_list[-1].sequence[:overhang_index]+overhang+"agagaccaa"))
-                                                new_unpacked_list[-1].primer_forward = new_unpacked_list[-2].primer_forward
-                                                new_unpacked_list[-1].primer_reverse = reverse_complement(new_unpacked_list[-2].sequence[overhang_index-40:overhang_index]+overhang+"agagaccaa")
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                            if overhang in backbone_list[-3][0][0:bsa_index[x]]:
+                                                overhang_index = backbone_list[-3][0].find(overhang,0,bsa_index[x])
+                                                backbone_list[-2].append(backbone_list[-3][0][:overhang_index]+overhang+"agagaccaa")
+                                                backbone_list[-2].append(backbone_list[-3][1])
+                                                backbone_list[-2].append(reverse_complement(backbone_list[-3][0][overhang_index-40:overhang_index]+overhang+"agagaccaa"))
                                                 if len(bsa_index)>x+1:
                                                     for q in range(x+1,len(bsa_index)):
-                                                        bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
-                                                new_unpacked_list.append(Part(new_unpacked_list[-2].name+"-"+str(x+1)+"b",new_unpacked_list[-2].type,"aaggtctca"+silent_mut(new_unpacked_list[-2].sequence[overhang_index:],bsa_index[x]-overhang_index,new_unpacked_list[-2].type)))
-                                                new_unpacked_list[-1].primer_forward = "aaggtctca" + silent_mut(new_unpacked_list[-3].sequence[overhang_index:],bsa_index[x]-overhang_index,new_unpacked_list[-3].type)[:44]
-                                                new_unpacked_list[-1].primer_reverse = new_unpacked_list[-3].primer_reverse
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                                del new_unpacked_list[-3]
-                                            elif overhang in new_unpacked_list[-1].sequence[bsa_index[x]+6:bsa_index[x]+37]:
-                                                overhang_index = new_unpacked_list[-1].sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
-                                                new_unpacked_list.append(Part(new_unpacked_list[-1].name+"-"+str(x+1)+"a",new_unpacked_list[-1].type,silent_mut(new_unpacked_list[-1].sequence[:overhang_index],bsa_index[x],new_unpacked_list[-1].type)+overhang+"agagaccaa"))
-                                                new_unpacked_list[-1].primer_forward = new_unpacked_list[-2].primer_forward
-                                                new_unpacked_list[-1].primer_reverse = reverse_complement(silent_mut(new_unpacked_list[-2].sequence[:overhang_index],bsa_index[x],new_unpacked_list[-2].type)[-40:]+overhang+"agagaccaa")
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                        bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
+                                                backbone_list[-1].append("aaggtctca"+silent_mut(backbone_list[-3][0][overhang_index:],bsa_index[x]-overhang_index,"CDS"))
+                                                backbone_list[-1].append("aaggtctca" + silent_mut(backbone_list[-3][0][overhang_index:],bsa_index[x]-overhang_index,"CDS")[:44])
+                                                backbone_list[-1].append(backbone_list[-3][2])
+                                                del backbone_list[-3]
+                                            elif overhang in backbone_list[-3][0][bsa_index[x]+6:bsa_index[x]+37]:
+                                                overhang_index = backbone_list[-3][0].find(overhang,bsa_index[x]+6,bsa_index[x]+37)
+                                                backbone_list[-2].append(silent_mut(backbone_list[-3][0][:overhang_index],bsa_index[x],"CDS")+overhang+"agagaccaa")
+                                                backbone_list[-2].append(backbone_list[-3][1])
+                                                backbone_list[-2].append(reverse_complement(silent_mut(backbone_list[-3][0][:overhang_index],bsa_index[x],"CDS")[-40:]+overhang+"agagaccaa"))
                                                 if len(bsa_index)>x+1:
                                                     for q in range(x+1,len(bsa_index)):
-                                                        bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
-                                                new_unpacked_list.append(Part(new_unpacked_list[-2].name+"-"+str(x+1)+"b",new_unpacked_list[-2].type,"aaggtctca"+new_unpacked_list[-2].sequence[overhang_index:]))
-                                                new_unpacked_list[-1].primer_forward = "aaggtctca" + new_unpacked_list[-3].sequence[overhang_index:overhang_index+44]
-                                                new_unpacked_list[-1].primer_reverse = new_unpacked_list[-3].primer_reverse
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                                del new_unpacked_list[-3]
+                                                        bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
+                                                backbone_list[-1].append("aaggtctca"+backbone_list[-3][0][overhang_index:])
+                                                backbone_list[-1].append("aaggtctca" + backbone_list[-3][0][overhang_index:overhang_index+44])
+                                                backbone_list[-1].append(backbone_list[-3][2])
+                                                del backbone_list[-3]
                                             else:
                                                 pass
                                         else:
-                                            if overhang in new_unpacked_list[-1].sequence[bsa_index[x]-30:bsa_index[x]]:
-                                                overhang_index = new_unpacked_list[-1].sequence.find(overhang,bsa_index[x]-30,bsa_index[x])
-                                                new_unpacked_list.append(Part(new_unpacked_list[-1].name+"-"+str(x+1)+"a",new_unpacked_list[-1].type,new_unpacked_list[-1].sequence[:overhang_index]+overhang+"agagaccaa"))
-                                                new_unpacked_list[-1].primer_forward = new_unpacked_list[-2].primer_forward
-                                                new_unpacked_list[-1].primer_reverse = reverse_complement(new_unpacked_list[-2].sequence[overhang_index-40:overhang_index]+overhang+"agagaccaa")
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                            if overhang in backbone_list[-3][0][bsa_index[x]-30:bsa_index[x]]:
+                                                overhang_index = backbone_list[-3][0].find(overhang,bsa_index[x]-30,bsa_index[x])
+                                                backbone_list[-2].append(backbone_list[-3][0][:overhang_index]+overhang+"agagaccaa")
+                                                backbone_list[-2].append(backbone_list[-3][1])
+                                                backbone_list[-2].append(reverse_complement(backbone_list[-3][0][overhang_index-40:overhang_index]+overhang+"agagaccaa"))
                                                 if len(bsa_index)>x+1:
                                                     for q in range(x+1,len(bsa_index)):
-                                                        bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
-                                                new_unpacked_list.append(Part(new_unpacked_list[-2].name+"-"+str(x+1)+"b",new_unpacked_list[-2].type,"aaggtctca"+silent_mut(new_unpacked_list[-2].sequence[overhang_index:],bsa_index[x]-overhang_index,new_unpacked_list[-2].type)))
-                                                new_unpacked_list[-1].primer_forward = "aaggtctca" + silent_mut(new_unpacked_list[-3].sequence[overhang_index:],bsa_index[x]-overhang_index,new_unpacked_list[-3].type)[:44]
-                                                new_unpacked_list[-1].primer_reverse = new_unpacked_list[-3].primer_reverse
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                                del new_unpacked_list[-3]
-                                            elif overhang in new_unpacked_list[-1].sequence[bsa_index[x]+6:bsa_index[x]+37]:
-                                                overhang_index = new_unpacked_list[-1].sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
-                                                new_unpacked_list.append(Part(new_unpacked_list[-1].name+"-"+str(x+1)+"a",new_unpacked_list[-1].type,silent_mut(new_unpacked_list[-1].sequence[:overhang_index],bsa_index[x],new_unpacked_list[-1].type)+overhang+"agagaccaa"))
-                                                new_unpacked_list[-1].primer_forward = new_unpacked_list[-2].primer_forward
-                                                new_unpacked_list[-1].primer_reverse = reverse_complement(silent_mut(new_unpacked_list[-2].sequence[:overhang_index],bsa_index[x],new_unpacked_list[-2].type)[-40:]+overhang+"agagaccaa")
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
+                                                        bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
+                                                backbone_list[-1].append("aaggtctca"+silent_mut(backbone_list[-3][0][overhang_index:],bsa_index[x]-overhang_index,"CDS"))
+                                                backbone_list[-1].append("aaggtctca" + silent_mut(backbone_list[-3][0][overhang_index:],bsa_index[x]-overhang_index,"CDS")[:44])
+                                                backbone_list[-1].append(backbone_list[-3][2])
+                                                del backbone_list[-3]
+                                            elif overhang in backbone_list[-3][0][bsa_index[x]+6:bsa_index[x]+37]:
+                                                overhang_index = backbone_list[-3][0].find(overhang,bsa_index[x]+6,bsa_index[x]+37)
+                                                backbone_list[-2].append(silent_mut(backbone_list[-3][0][:overhang_index],bsa_index[x],"CDS")+overhang+"agagaccaa")
+                                                backbone_list[-2].append(backbone_list[-3][1])
+                                                backbone_list[-2].append(reverse_complement(silent_mut(backbone_list[-3][0][:overhang_index],bsa_index[x],"CDS")[-40:]+overhang+"agagaccaa"))
                                                 if len(bsa_index)>x+1:
                                                     for q in range(x+1,len(bsa_index)):
-                                                        bsa_index[q] = bsa_index[q]-len(new_unpacked_list[-1].sequence[:-9])+13
-                                                new_unpacked_list.append(Part(new_unpacked_list[-2].name+"-"+str(x+1)+"b",new_unpacked_list[-2].type,"aaggtctca"+new_unpacked_list[-2].sequence[overhang_index:]))
-                                                new_unpacked_list[-1].primer_forward = "aaggtctca" + new_unpacked_list[-3].sequence[overhang_index:overhang_index+44]
-                                                new_unpacked_list[-1].primer_reverse = new_unpacked_list[-3].primer_reverse
-                                                new_unpacked_list[-1].assembly_method = "Type_II_Restriction_Enzyme"
-                                                del new_unpacked_list[-3]
+                                                        bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
+                                                backbone_list[-1].append("aaggtctca"+backbone_list[-3][0][overhang_index:])
+                                                backbone_list[-1].append("aaggtctca" + backbone_list[-3][0][overhang_index:overhang_index+44])
+                                                backbone_list[-1].append(backbone_list[-3][2])
+                                                del backbone_list[-3]
                                             else:
                                                 pass
                             else:
-                                new_unpacked_list.append(unpacked_list[i])
-                        if "backbone" in bsaI_removal_key:
-                            bsa_index = []
-                            ii=0
-                            while len(bsa_index) != (new_backbone_sequence.count("ggtctc")+new_backbone_sequence.count("gagacc"))-2 and ii<10:
-                                if "ggtctc" in new_backbone_sequence[13:] and "gagacc" not in new_backbone_sequence[:len(new_backbone_sequence)-13]:
-                                    if bsa_index == []:
-                                        bsa_index.append(new_backbone_sequence.find("ggtctc",13))
-                                    else:
-                                        bsa_index.append(new_backbone_sequence.find("ggtctc",bsa_index[-1]+1))
-                                elif "gagacc" in new_backbone_sequence[:len(new_backbone_sequence)-13] and "ggtctc" not in new_backbone_sequence[13:]:
-                                    if bsa_index == []:
-                                        bsa_index.append(new_backbone_sequence.find("gagacc",0,len(new_backbone_sequence)-13))
-                                    else:
-                                        bsa_index.append(new_backbone_sequence.find("gagacc",bsa_index[-1]+1))
-                                elif "ggtctc" in new_backbone_sequence[13:] and "gagacc" in new_backbone_sequence[:len(new_backbone_sequence)-13]:
-                                    if bsa_index == []:
-                                        bsa_index.append(min(new_backbone_sequence.find("ggtctc",13),new_backbone_sequence.find("gagacc",0,len(new_backbone_sequence)-13)))
-                                    else:
-                                        bsa_index.append(min(new_backbone_sequence.find("ggtctc",bsa_index[-1]+1),new_backbone_sequence.find("gagacc",bsa_index[-1]+1)))
-                                ii+=1
-                            backbone_list = []
-                            new_backbone_primers = [new_backbone_sequence[:40],reverse_complement(new_backbone_sequence[-40:])]
-                            for x in range(bsaI_removal_key.count("backbone")):
-                                backbone_list.append([])
-                                backbone_list.append([])
-                                part_index = bsaI_removal_key.index("backbone")+x
-                                overhang = gg_opt[len(unpacked_list)+1+part_index]
-                                if x == 0:
-                                    if bsa_index[x]-30 < 0:
-                                        if overhang in new_backbone_sequence[0:bsa_index[x]]:
-                                            overhang_index = new_backbone_sequence.find(overhang,0,bsa_index[x])
-                                            backbone_list[-2].append(new_backbone_sequence[:overhang_index]+overhang+"agagaccaa")
-                                            backbone_list[-2].append(new_backbone_primers[0])
-                                            backbone_list[-2].append(reverse_complement(new_backbone_sequence[overhang_index-40:overhang_index]+overhang+"agagaccaa"))
-                                            if len(bsa_index)>x+1:
-                                                for q in range(x+1,len(bsa_index)):
-                                                    bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
-                                            backbone_list[-1].append("aaggtctca"+silent_mut(new_backbone_sequence[overhang_index:],bsa_index[x]-overhang_index,"CDS"))
-                                            backbone_list[-1].append("aaggtctca" + silent_mut(new_backbone_sequence[overhang_index:],bsa_index[x]-overhang_index,"CDS")[:44])
-                                            backbone_list[-1].append(new_backbone_primers[1])
-                                        elif overhang in new_backbone_sequence[bsa_index[x]+6:bsa_index[x]+37]:
-                                            overhang_index = new_backbone_sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
-                                            backbone_list[-2].append(silent_mut(new_backbone_sequence[:overhang_index],bsa_index[x],"CDS")+overhang+"agagaccaa")
-                                            backbone_list[-2].append(new_backbone_primers[0])
-                                            backbone_list[-2].append(reverse_complement(silent_mut(new_backbone_sequence[:overhang_index],bsa_index[x],"CDS")[-40:]+overhang+"agagaccaa"))
-                                            if len(bsa_index)>x+1:
-                                                for q in range(x+1,len(bsa_index)):
-                                                    bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
-                                            backbone_list[-1].append("aaggtctca"+new_backbone_sequence[overhang_index:])
-                                            backbone_list[-1].append("aaggtctca" + new_backbone_sequence[overhang_index:overhang_index+44])
-                                            backbone_list[-1].append(new_backbone_primers[1])
-                                        else:
-                                            pass
-                                    else:
-                                        if overhang in new_backbone_sequence[bsa_index[x]-30:bsa_index[x]]:
-                                            overhang_index = new_backbone_sequence.find(overhang,bsa_index[x]-30,bsa_index[x])
-                                            backbone_list[-2].append(new_backbone_sequence[:overhang_index]+overhang+"agagaccaa")
-                                            backbone_list[-2].append(new_backbone_primers[0])
-                                            backbone_list[-2].append(reverse_complement(new_backbone_sequence[overhang_index-40:overhang_index]+overhang+"agagaccaa"))
-                                            if len(bsa_index)>x+1:
-                                                for q in range(x+1,len(bsa_index)):
-                                                    bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
-                                            backbone_list[-1].append("aaggtctca"+silent_mut(new_backbone_sequence[overhang_index:],bsa_index[x]-overhang_index,"CDS"))
-                                            backbone_list[-1].append("aaggtctca" + silent_mut(new_backbone_sequence[overhang_index:],bsa_index[x]-overhang_index,"CDS")[:44])
-                                            backbone_list[-1].append(new_backbone_primers[1])
-                                        elif overhang in new_backbone_sequence[bsa_index[x]+6:bsa_index[x]+37]:
-                                            overhang_index = new_backbone_sequence.find(overhang,bsa_index[x]+6,bsa_index[x]+37)
-                                            backbone_list[-2].append(silent_mut(new_backbone_sequence[:overhang_index],bsa_index[x],"CDS")+overhang+"agagaccaa")
-                                            backbone_list[-2].append(new_backbone_primers[0])
-                                            backbone_list[-2].append(reverse_complement(silent_mut(new_backbone_sequence[:overhang_index],bsa_index[x],"CDS")[-40:]+overhang+"agagaccaa"))
-                                            if len(bsa_index)>x+1:
-                                                for q in range(x+1,len(bsa_index)):
-                                                    bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
-                                            backbone_list[-1].append("aaggtctca"+new_backbone_sequence[overhang_index:])
-                                            backbone_list[-1].append("aaggtctca" + new_backbone_sequence[overhang_index:overhang_index+44])
-                                            backbone_list[-1].append(new_backbone_primers[1])
-                                        else:
-                                            pass
+                                backbone_list = [[new_backbone_sequence,new_backbone_sequence[:60],reverse_complement(new_backbone_sequence[-60:])]]
+                            new_builds_list.append(new_unpacked_list)
+
+                    #Optimize primer Tm based off config settings
+                    if primer_optimization == "range":
+                        for unpacked_list in new_builds_list:
+                            for part in unpacked_list:
+                                if mt.Tm_NN(part.primer_forward) < primer_tm_range[0]:
+                                    part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
                                 else:
-                                    if bsa_index[x]-30 < 0:
-                                        if overhang in backbone_list[-3][0][0:bsa_index[x]]:
-                                            overhang_index = backbone_list[-3][0].find(overhang,0,bsa_index[x])
-                                            backbone_list[-2].append(backbone_list[-3][0][:overhang_index]+overhang+"agagaccaa")
-                                            backbone_list[-2].append(backbone_list[-3][1])
-                                            backbone_list[-2].append(reverse_complement(backbone_list[-3][0][overhang_index-40:overhang_index]+overhang+"agagaccaa"))
-                                            if len(bsa_index)>x+1:
-                                                for q in range(x+1,len(bsa_index)):
-                                                    bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
-                                            backbone_list[-1].append("aaggtctca"+silent_mut(backbone_list[-3][0][overhang_index:],bsa_index[x]-overhang_index,"CDS"))
-                                            backbone_list[-1].append("aaggtctca" + silent_mut(backbone_list[-3][0][overhang_index:],bsa_index[x]-overhang_index,"CDS")[:44])
-                                            backbone_list[-1].append(backbone_list[-3][2])
-                                            del backbone_list[-3]
-                                        elif overhang in backbone_list[-3][0][bsa_index[x]+6:bsa_index[x]+37]:
-                                            overhang_index = backbone_list[-3][0].find(overhang,bsa_index[x]+6,bsa_index[x]+37)
-                                            backbone_list[-2].append(silent_mut(backbone_list[-3][0][:overhang_index],bsa_index[x],"CDS")+overhang+"agagaccaa")
-                                            backbone_list[-2].append(backbone_list[-3][1])
-                                            backbone_list[-2].append(reverse_complement(silent_mut(backbone_list[-3][0][:overhang_index],bsa_index[x],"CDS")[-40:]+overhang+"agagaccaa"))
-                                            if len(bsa_index)>x+1:
-                                                for q in range(x+1,len(bsa_index)):
-                                                    bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
-                                            backbone_list[-1].append("aaggtctca"+backbone_list[-3][0][overhang_index:])
-                                            backbone_list[-1].append("aaggtctca" + backbone_list[-3][0][overhang_index:overhang_index+44])
-                                            backbone_list[-1].append(backbone_list[-3][2])
-                                            del backbone_list[-3]
+                                    for i in range(len(part.primer_forward),32,-1):
+                                        if mt.Tm_NN(part.primer_forward[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_forward[:i]) <= primer_tm_range[1]:
+                                            part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
+                                            part.primer_forward = part.primer_forward[:i]
+                                            break
                                         else:
-                                            pass
-                                    else:
-                                        if overhang in backbone_list[-3][0][bsa_index[x]-30:bsa_index[x]]:
-                                            overhang_index = backbone_list[-3][0].find(overhang,bsa_index[x]-30,bsa_index[x])
-                                            backbone_list[-2].append(backbone_list[-3][0][:overhang_index]+overhang+"agagaccaa")
-                                            backbone_list[-2].append(backbone_list[-3][1])
-                                            backbone_list[-2].append(reverse_complement(backbone_list[-3][0][overhang_index-40:overhang_index]+overhang+"agagaccaa"))
-                                            if len(bsa_index)>x+1:
-                                                for q in range(x+1,len(bsa_index)):
-                                                    bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
-                                            backbone_list[-1].append("aaggtctca"+silent_mut(backbone_list[-3][0][overhang_index:],bsa_index[x]-overhang_index,"CDS"))
-                                            backbone_list[-1].append("aaggtctca" + silent_mut(backbone_list[-3][0][overhang_index:],bsa_index[x]-overhang_index,"CDS")[:44])
-                                            backbone_list[-1].append(backbone_list[-3][2])
-                                            del backbone_list[-3]
-                                        elif overhang in backbone_list[-3][0][bsa_index[x]+6:bsa_index[x]+37]:
-                                            overhang_index = backbone_list[-3][0].find(overhang,bsa_index[x]+6,bsa_index[x]+37)
-                                            backbone_list[-2].append(silent_mut(backbone_list[-3][0][:overhang_index],bsa_index[x],"CDS")+overhang+"agagaccaa")
-                                            backbone_list[-2].append(backbone_list[-3][1])
-                                            backbone_list[-2].append(reverse_complement(silent_mut(backbone_list[-3][0][:overhang_index],bsa_index[x],"CDS")[-40:]+overhang+"agagaccaa"))
-                                            if len(bsa_index)>x+1:
-                                                for q in range(x+1,len(bsa_index)):
-                                                    bsa_index[q] = bsa_index[q]-len(backbone_list[-2][0][:-9])+13
-                                            backbone_list[-1].append("aaggtctca"+backbone_list[-3][0][overhang_index:])
-                                            backbone_list[-1].append("aaggtctca" + backbone_list[-3][0][overhang_index:overhang_index+44])
-                                            backbone_list[-1].append(backbone_list[-3][2])
-                                            del backbone_list[-3]
+                                            part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                if mt.Tm_NN(part.primer_reverse) < primer_tm_range[0]:
+                                    part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                                else:
+                                    for i in range(len(part.primer_reverse),32,-1):
+                                        if mt.Tm_NN(part.primer_reverse[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_reverse[:i]) <= primer_tm_range[1]:
+                                            part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:i])
+                                            part.primer_reverse = part.primer_reverse[:i]
+                                            break
                                         else:
-                                            pass
-                        else:
-                            backbone_list = [[new_backbone_sequence,new_backbone_sequence[:60],reverse_complement(new_backbone_sequence[-60:])]]
-                        new_builds_list.append(new_unpacked_list)
-                if primer_optimization == "range":
-                    for unpacked_list in new_builds_list:
-                        for part in unpacked_list:
-                            if mt.Tm_NN(part.primer_forward) < primer_tm_range[0]:
-                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                            else:
-                                for i in range(len(part.primer_forward),32,-1):
-                                    if mt.Tm_NN(part.primer_forward[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_forward[:i]) <= primer_tm_range[1]:
-                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
-                                        part.primer_forward = part.primer_forward[:i]
-                                        break
-                                    else:
-                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                            if mt.Tm_NN(part.primer_reverse) < primer_tm_range[0]:
-                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                            else:
-                                for i in range(len(part.primer_reverse),32,-1):
-                                    if mt.Tm_NN(part.primer_reverse[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_reverse[:i]) <= primer_tm_range[1]:
-                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:i])
-                                        part.primer_reverse = part.primer_reverse[:i]
-                                        break
-                                    else:
-                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                    breakit=False
-                    for x in range(60,32,-1):
-                        for z in range(60,32,-1):
-                            if mt.Tm_NN(new_backbone_sequence[:x])>=primer_tm_range[0] and mt.Tm_NN(new_backbone_sequence[:x])<=primer_tm_range[1] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:])[:z]) >= primer_tm_range[0] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:])[:z]) <= primer_tm_range[1]:
-                                backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-46:])[:z]]
-                                backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:])[:z])]
-                                breakit=True
-                            if breakit:
-                                break
-                        if breakit:
-                            break
-                    if not breakit:
-                        backbone_primers = [new_backbone_sequence[:60],reverse_complement(new_backbone_sequence[-60:])]
-                        backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:60]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:]))]
-                elif primer_optimization == "near":
-                    for unpacked_list in new_builds_list:
-                        for part in unpacked_list:
-                            breakit=False
-                            for i in range(len(part.primer_forward),32,-1):
-                                for j in range(len(part.primer_reverse),32,-1):
-                                    if abs(mt.Tm_NN(part.primer_forward[:i])-mt.Tm_NN(part.primer_reverse[:j])) <=5:
-                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
-                                        part.primer_forward = part.primer_forward[:i]
-                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:j])
-                                        part.primer_reverse = part.primer_reverse[:j]
-                                        breakit=True
-                                    if breakit:
-                                        break
+                                            part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                        breakit=False
+                        for x in range(60,32,-1):
+                            for z in range(60,32,-1):
+                                if mt.Tm_NN(new_backbone_sequence[:x])>=primer_tm_range[0] and mt.Tm_NN(new_backbone_sequence[:x])<=primer_tm_range[1] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:])[:z]) >= primer_tm_range[0] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:])[:z]) <= primer_tm_range[1]:
+                                    backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-46:])[:z]]
+                                    backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:])[:z])]
+                                    breakit=True
                                 if breakit:
                                     break
-                            if not breakit:
-                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                    breakit=False
-                    for x in range(60,32,-1):
-                        for z in range(60,32,-1):
-                            if abs(mt.Tm_NN(new_backbone_sequence[:x])-mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:])[:z]))<=5:
-                                backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-60:])[:z]]
-                                backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:])[:z])]
-                                breakit=True
                             if breakit:
                                 break
-                        if breakit:
-                            break
-                    if not breakit:
-                        backbone_primers = [new_backbone_sequence[:60],reverse_complement(new_backbone_sequence[-60:])]
-                        backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:60]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:]))]
-                elif primer_optimization == "both":
-                    for unpacked_list in new_builds_list:
-                        for part in unpacked_list:
-                            if mt.Tm_NN(part.primer_forward) < primer_tm_range[0] and mt.Tm_NN(part.primer_reverse) < primer_tm_range[0]:
-                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                            elif mt.Tm_NN(part.primer_forward) < primer_tm_range[0] and mt.Tm_NN(part.primer_reverse) >= primer_tm_range[0]:
-                                breakit=False
-                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                                for j in range(len(part.primer_reverse),32,-1):
-                                    if abs(part.primer_forward_tm-mt.Tm_NN(part.primer_reverse[:j])) <=5:
-                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:j])
-                                        part.primer_reverse = part.primer_reverse[:j]
-                                        breakit=True
-                                if not breakit:
-                                    part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                            elif mt.Tm_NN(part.primer_reverse) < primer_tm_range[0] and mt.Tm_NN(part.primer_forward) >= primer_tm_range[0]:
-                                breakit=False
-                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                                for i in range(len(part.primer_forward),32,-1):
-                                    if abs(part.primer_reverse_tm-mt.Tm_NN(part.primer_forward[:i])) <=5:
-                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
-                                        part.primer_forward = part.primer_forward[:i]
-                                        breakit=True
-                                if not breakit:
-                                    part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                            else:
+                        if not breakit:
+                            backbone_primers = [new_backbone_sequence[:60],reverse_complement(new_backbone_sequence[-60:])]
+                            backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:60]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:]))]
+                    elif primer_optimization == "near":
+                        for unpacked_list in new_builds_list:
+                            for part in unpacked_list:
                                 breakit=False
                                 for i in range(len(part.primer_forward),32,-1):
                                     for j in range(len(part.primer_reverse),32,-1):
-                                        if abs(mt.Tm_NN(part.primer_forward[:i])-mt.Tm_NN(part.primer_reverse[:j]))<=5 and mt.Tm_NN(part.primer_forward[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_forward[:i]) <= primer_tm_range[1] and mt.Tm_NN(part.primer_reverse[:j]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_reverse[:j]) <= primer_tm_range[1]:
+                                        if abs(mt.Tm_NN(part.primer_forward[:i])-mt.Tm_NN(part.primer_reverse[:j])) <=5:
                                             part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
                                             part.primer_forward = part.primer_forward[:i]
                                             part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:j])
@@ -1945,39 +2006,98 @@ try:
                                 if not breakit:
                                     part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
                                     part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                    breakit=False
-                    for x in range(60,32,-1):
-                        for z in range(60,32,-1):
-                            if abs(mt.Tm_NN(new_backbone_sequence[:x])-mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:])[:z]))<=5 and mt.Tm_NN(new_backbone_sequence[:x])>=primer_tm_range[0] and mt.Tm_NN(new_backbone_sequence[:x])<=primer_tm_range[1] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:])[:z]) >= primer_tm_range[0] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:])[:z]) <= primer_tm_range[1]:
-                                backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-60:])[:z]]
-                                backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:])[:z])]
-                                breakit=True
+                        breakit=False
+                        for x in range(60,32,-1):
+                            for z in range(60,32,-1):
+                                if abs(mt.Tm_NN(new_backbone_sequence[:x])-mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:])[:z]))<=5:
+                                    backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-60:])[:z]]
+                                    backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:])[:z])]
+                                    breakit=True
+                                if breakit:
+                                    break
                             if breakit:
                                 break
-                        if breakit:
-                            break
-                    if not breakit:
+                        if not breakit:
+                            backbone_primers = [new_backbone_sequence[:60],reverse_complement(new_backbone_sequence[-60:])]
+                            backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:60]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:]))]
+                    elif primer_optimization == "both":
+                        for unpacked_list in new_builds_list:
+                            for part in unpacked_list:
+                                if mt.Tm_NN(part.primer_forward) < primer_tm_range[0] and mt.Tm_NN(part.primer_reverse) < primer_tm_range[0]:
+                                    part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                    part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                                elif mt.Tm_NN(part.primer_forward) < primer_tm_range[0] and mt.Tm_NN(part.primer_reverse) >= primer_tm_range[0]:
+                                    breakit=False
+                                    part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                    for j in range(len(part.primer_reverse),32,-1):
+                                        if abs(part.primer_forward_tm-mt.Tm_NN(part.primer_reverse[:j])) <=5:
+                                            part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:j])
+                                            part.primer_reverse = part.primer_reverse[:j]
+                                            breakit=True
+                                    if not breakit:
+                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                                elif mt.Tm_NN(part.primer_reverse) < primer_tm_range[0] and mt.Tm_NN(part.primer_forward) >= primer_tm_range[0]:
+                                    breakit=False
+                                    part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                                    for i in range(len(part.primer_forward),32,-1):
+                                        if abs(part.primer_reverse_tm-mt.Tm_NN(part.primer_forward[:i])) <=5:
+                                            part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
+                                            part.primer_forward = part.primer_forward[:i]
+                                            breakit=True
+                                    if not breakit:
+                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                else:
+                                    breakit=False
+                                    for i in range(len(part.primer_forward),32,-1):
+                                        for j in range(len(part.primer_reverse),32,-1):
+                                            if abs(mt.Tm_NN(part.primer_forward[:i])-mt.Tm_NN(part.primer_reverse[:j]))<=5 and mt.Tm_NN(part.primer_forward[:i]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_forward[:i]) <= primer_tm_range[1] and mt.Tm_NN(part.primer_reverse[:j]) >= primer_tm_range[0] and mt.Tm_NN(part.primer_reverse[:j]) <= primer_tm_range[1]:
+                                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward[:i])
+                                                part.primer_forward = part.primer_forward[:i]
+                                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse[:j])
+                                                part.primer_reverse = part.primer_reverse[:j]
+                                                breakit=True
+                                            if breakit:
+                                                break
+                                        if breakit:
+                                            break
+                                    if not breakit:
+                                        part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                        part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
+                        breakit=False
+                        for x in range(60,32,-1):
+                            for z in range(60,32,-1):
+                                if abs(mt.Tm_NN(new_backbone_sequence[:x])-mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:])[:z]))<=5 and mt.Tm_NN(new_backbone_sequence[:x])>=primer_tm_range[0] and mt.Tm_NN(new_backbone_sequence[:x])<=primer_tm_range[1] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:])[:z]) >= primer_tm_range[0] and mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:])[:z]) <= primer_tm_range[1]:
+                                    backbone_primers = [new_backbone_sequence[:x],reverse_complement(new_backbone_sequence[-60:])[:z]]
+                                    backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:x]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:])[:z])]
+                                    breakit=True
+                                if breakit:
+                                    break
+                            if breakit:
+                                break
+                        if not breakit:
+                            backbone_primers = [new_backbone_sequence[:60],reverse_complement(new_backbone_sequence[-60:])]
+                            backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:60]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:]))]
+                    else:
+                        for unpacked_list in new_builds_list:
+                            for part in unpacked_list:
+                                part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
+                                part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
                         backbone_primers = [new_backbone_sequence[:60],reverse_complement(new_backbone_sequence[-60:])]
                         backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:60]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:]))]
-                else:
-                    for unpacked_list in new_builds_list:
-                        for part in unpacked_list:
-                            part.primer_forward_tm = mt.Tm_NN(part.primer_forward)
-                            part.primer_reverse_tm = mt.Tm_NN(part.primer_reverse)
-                    backbone_primers = [new_backbone_sequence[:60],reverse_complement(new_backbone_sequence[-60:])]
-                    backbone_primers_tm = [mt.Tm_NN(new_backbone_sequence[:60]),mt.Tm_NN(reverse_complement(new_backbone_sequence[-60:]))]
-                app.registry[session_id]["backbone_primers"] = backbone_primers
-                app.registry[session_id]["backbone_primers_tm"] = backbone_primers_tm
-                app.registry[session_id]["backbone_list"] = backbone_list
-                parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
-                app.registry[session_id]['builds_list'] = new_builds_list
-                app.registry[session_id]["new_backbone_sequence"] = new_backbone_sequence
-                if golden_gate_error == "":
-                    self.redirect("/assembly")
-            self.render("main_page.html",golden_gate_error=golden_gate_error,css=css,js=js,parts_list=parts_list)
-            #except Exception as e:
-            #    logging.error(e)
-            #    self.redirect("/error")
+
+                    #Register new parts and direct to output page
+                    app.registry[session_id]["backbone_primers"] = backbone_primers
+                    app.registry[session_id]["backbone_primers_tm"] = backbone_primers_tm
+                    app.registry[session_id]["backbone_list"] = backbone_list
+                    parts_list,session_id = self.update_part_list(updated_parts_list=parts_list)
+                    app.registry[session_id]['builds_list'] = new_builds_list
+                    app.registry[session_id]["new_backbone_sequence"] = new_backbone_sequence
+                    if golden_gate_error == "":
+                        self.redirect("/assembly")
+                self.render("main_page.html",golden_gate_error=golden_gate_error,css=css,js=js,parts_list=parts_list)
+            except Exception as e:
+                logging.error(e)
+                self.redirect("/error")
 
 
     '''
@@ -2107,85 +2227,88 @@ try:
                 logging.error(e)
                 self.redirect("/error")
 
+    #Write the results to CSV and to the assembly output page
     class AssemblyHandler(Handler):
         def get(self):
-            #try:
-            parts_list,session_id = self.get_parts_list()
-            application = webapp2.get_app()
-            builds_list = application.registry.get(session_id)['builds_list']
-            new_backbone_sequence = application.registry.get(session_id)["new_backbone_sequence"]
-            backbone_primers = application.registry.get(session_id)["backbone_primers"]
-            backbone_primers_tm = application.registry.get(session_id)["backbone_primers_tm"]
-            backbone_list = application.registry.get(session_id)["backbone_list"]
-            import csv
-            if is_local:
-                assembly_file = "constructs/plasmid_assembly_%s.csv"
-            else:
-                assembly_file = "/var/www/ibiocad/iBioCAD/constructs/plasmid_assembly_%s.csv"
-            with open(assembly_file%session_id,'w') as csvfile:
-                fieldnames = ['Name','Type','Sequence','Description']
-                csvdictwriter = csv.DictWriter(csvfile,fieldnames=fieldnames)
-                csvwriter = csv.writer(csvfile)
-                for unpacked_list in builds_list:
-                    if len(unpacked_list)<2:
-                        break
-                    if unpacked_list[0].assembly_method == "Yeast_Assembly" or unpacked_list[0].assembly_method == "Gibson_Assembly" or unpacked_list[0].assembly_method == "Type_II_Restriction_Enzyme":
-                        csvdictwriter2 = csv.DictWriter(csvfile,fieldnames=['Name','','Sequence','Tm'])
-                    elif unpacked_list[0].assembly_method == "LCR":
-                        csvdictwriter2 = csv.DictWriter(csvfile,fieldnames=['Bridge','','Sequence'])
-                    build = []
-                    for part in unpacked_list:
-                        build.append(part.name)
-                    csvwriter.writerow([','.join(build)])
-                    csvwriter.writerow(['Modified Parts'])
-                    try:
-                        csvdictwriter.writeheader()
-                    except:
-                        csvwriter.writerow(fieldnames)
-                    for num,backbone_part in enumerate(backbone_list,1):
-                        csvwriter.writerow(['Backbone'+str(num),'',backbone_part[0],''])
-                    for part in unpacked_list:
-                        csvdictwriter.writerow({'Name':part.name,'Type':part.type,'Sequence':part.sequence,'Description':part.description})
-                    csvwriter.writerow([])
-                    if unpacked_list[0].assembly_method == "Yeast_Assembly" or unpacked_list[0].assembly_method == "Gibson_Assembly" or unpacked_list[0].assembly_method == "Type_II_Restriction_Enzyme":
-                        csvwriter.writerow(['Primers'])
-                    elif unpacked_list[0].assembly_method == "LCR":
-                        csvwriter.writerow(['Bridges'])
-                    try:
-                        csvdictwriter2.writeheader()
-                    except:
-                        if unpacked_list[0].assembly_method == "Yeast_Assembly" or unpacked_list[0].assembly_method == "Gibson_Assembly" or unpacked_list[0].assembly_method == "Type_II_Restriction_Enzyme":
-                            csvwriter.writerow(['Name','','Sequence','Tm'])
-                        elif unpacked_list[0].assembly_method == "LCR":
-                            csvwriter.writerow(['Bridge','','Sequence'])
-                    if unpacked_list[0].assembly_method == "Yeast_Assembly" or unpacked_list[0].assembly_method == "Gibson_Assembly" or unpacked_list[0].assembly_method == "Type_II_Restriction_Enzyme":
-                        for num,backbone_part in enumerate(backbone_list,1):
-                            csvdictwriter2.writerow({'Name':("Backbone,forward"+str(num)),'':'','Sequence':backbone_part[1],'Tm':mt.Tm_NN(backbone_part[1])})
-                            csvdictwriter2.writerow({'Name':("Backbone,reverse"+str(num)),'':'','Sequence':backbone_part[2],'Tm':mt.Tm_NN(backbone_part[2])})
-                        for part in unpacked_list:
-                            csvdictwriter2.writerow({'Name':(part.name+",forward"),'':'','Sequence':part.primer_forward,'Tm':part.primer_forward_tm})
-                            csvdictwriter2.writerow({'Name':(part.name+",reverse"),'':'','Sequence':part.primer_reverse,'Tm':part.primer_reverse_tm})
-                    elif unpacked_list[0].assembly_method == "LCR":
-                        csvdictwriter2.writerow({'Bridge':("plasmid backbone-"+parts_list[0].name),'':'','Sequence':parts_list[0].bridge_with_previous_part})
-                        for i,part in enumerate(unpacked_list[:-1]):
-                            csvdictwriter2.writerow({'Bridge':(part.name+"-"+unpacked_list[i+1].name),'':'','Sequence':part.bridge_with_next_part})
-                        csvdictwriter2.writerow({'Bridge':(parts_list[-1].name+"-plasmid backbone"),'':'','Sequence':parts_list[-1].bridge_with_next_part})
-                    csvwriter.writerow([])
-            with open(assembly_file%session_id,'r') as f:
-                data_uri = "data:text/csv;base64,"
-                import base64
-                if sys.version_info[0] == 3:
-                    data_uri += str(base64.b64encode(bytes(f.read(),'utf-8')),'utf-8')
-                elif sys.version_info[0] == 2:
-                    data_uri += base64.b64encode(f.read())
-            import datetime
-            filename = "plasmid_assembly_%s.csv"%datetime.date.today()
-            os.remove(assembly_file%session_id)
-            part_dir = builds_list[0][0].assembly_method
-            self.render("assembly_page.html",builds_list=builds_list,part_dir=part_dir,new_backbone_sequence=new_backbone_sequence,backbone_primers=backbone_primers,backbone_primers_tm=backbone_primers_tm,backbone_list=backbone_list,data_uri=data_uri,filename=filename,css=css)
-            #except Exception as e:
-            #    logging.error(e)
-            #    self.redirect("/error")
+            try:
+	            parts_list,session_id = self.get_parts_list()
+	            application = webapp2.get_app()
+	            builds_list = application.registry.get(session_id)['builds_list']
+	            new_backbone_sequence = application.registry.get(session_id)["new_backbone_sequence"]
+	            backbone_primers = application.registry.get(session_id)["backbone_primers"]
+	            backbone_primers_tm = application.registry.get(session_id)["backbone_primers_tm"]
+	            backbone_list = application.registry.get(session_id)["backbone_list"]
+	            import csv
+	            if is_local:
+	                assembly_file = "constructs/plasmid_assembly_%s.csv"
+	            else:
+	                assembly_file = "/var/www/ibiocad/iBioCAD/constructs/plasmid_assembly_%s.csv"
+	            with open(assembly_file%session_id,'w') as csvfile:
+	                fieldnames = ['Name','Type','Sequence','Description']
+	                csvdictwriter = csv.DictWriter(csvfile,fieldnames=fieldnames)
+	                csvwriter = csv.writer(csvfile)
+	                for unpacked_list in builds_list:
+	                    if len(unpacked_list)<2:
+	                        break
+	                    if unpacked_list[0].assembly_method == "Yeast_Assembly" or unpacked_list[0].assembly_method == "Gibson_Assembly" or unpacked_list[0].assembly_method == "Type_II_Restriction_Enzyme":
+	                        csvdictwriter2 = csv.DictWriter(csvfile,fieldnames=['Name','','Sequence','Tm'])
+	                    elif unpacked_list[0].assembly_method == "LCR":
+	                        csvdictwriter2 = csv.DictWriter(csvfile,fieldnames=['Bridge','','Sequence'])
+	                    build = []
+	                    for part in unpacked_list:
+	                        build.append(part.name)
+	                    csvwriter.writerow([','.join(build)])
+	                    csvwriter.writerow(['Modified Parts'])
+	                    try:
+	                        csvdictwriter.writeheader()
+	                    except:
+	                        csvwriter.writerow(fieldnames)
+	                    for num,backbone_part in enumerate(backbone_list,1):
+	                        csvwriter.writerow(['Backbone'+str(num),'',backbone_part[0],''])
+	                    for part in unpacked_list:
+	                        csvdictwriter.writerow({'Name':part.name,'Type':part.type,'Sequence':part.sequence,'Description':part.description})
+	                    csvwriter.writerow([])
+	                    if unpacked_list[0].assembly_method == "Yeast_Assembly" or unpacked_list[0].assembly_method == "Gibson_Assembly" or unpacked_list[0].assembly_method == "Type_II_Restriction_Enzyme":
+	                        csvwriter.writerow(['Primers'])
+	                    elif unpacked_list[0].assembly_method == "LCR":
+	                        csvwriter.writerow(['Bridges'])
+	                    try:
+	                        csvdictwriter2.writeheader()
+	                    except:
+	                        if unpacked_list[0].assembly_method == "Yeast_Assembly" or unpacked_list[0].assembly_method == "Gibson_Assembly" or unpacked_list[0].assembly_method == "Type_II_Restriction_Enzyme":
+	                            csvwriter.writerow(['Name','','Sequence','Tm'])
+	                        elif unpacked_list[0].assembly_method == "LCR":
+	                            csvwriter.writerow(['Bridge','','Sequence'])
+	                    if unpacked_list[0].assembly_method == "Yeast_Assembly" or unpacked_list[0].assembly_method == "Gibson_Assembly" or unpacked_list[0].assembly_method == "Type_II_Restriction_Enzyme":
+	                        for num,backbone_part in enumerate(backbone_list,1):
+	                            csvdictwriter2.writerow({'Name':("Backbone,forward"+str(num)),'':'','Sequence':backbone_part[1],'Tm':mt.Tm_NN(backbone_part[1])})
+	                            csvdictwriter2.writerow({'Name':("Backbone,reverse"+str(num)),'':'','Sequence':backbone_part[2],'Tm':mt.Tm_NN(backbone_part[2])})
+	                        for part in unpacked_list:
+	                            csvdictwriter2.writerow({'Name':(part.name+",forward"),'':'','Sequence':part.primer_forward,'Tm':part.primer_forward_tm})
+	                            csvdictwriter2.writerow({'Name':(part.name+",reverse"),'':'','Sequence':part.primer_reverse,'Tm':part.primer_reverse_tm})
+	                    elif unpacked_list[0].assembly_method == "LCR":
+	                        csvdictwriter2.writerow({'Bridge':("plasmid backbone-"+parts_list[0].name),'':'','Sequence':parts_list[0].bridge_with_previous_part})
+	                        for i,part in enumerate(unpacked_list[:-1]):
+	                            csvdictwriter2.writerow({'Bridge':(part.name+"-"+unpacked_list[i+1].name),'':'','Sequence':part.bridge_with_next_part})
+	                        csvdictwriter2.writerow({'Bridge':(parts_list[-1].name+"-plasmid backbone"),'':'','Sequence':parts_list[-1].bridge_with_next_part})
+	                    csvwriter.writerow([])
+	            with open(assembly_file%session_id,'r') as f:
+	                data_uri = "data:text/csv;base64,"
+	                import base64
+	                if sys.version_info[0] == 3:
+	                    data_uri += str(base64.b64encode(bytes(f.read(),'utf-8')),'utf-8')
+	                elif sys.version_info[0] == 2:
+	                    data_uri += base64.b64encode(f.read())
+	            import datetime
+	            filename = "plasmid_assembly_%s.csv"%datetime.date.today()
+	            os.remove(assembly_file%session_id)
+	            part_dir = builds_list[0][0].assembly_method
+	            self.render("assembly_page.html",builds_list=builds_list,part_dir=part_dir,new_backbone_sequence=new_backbone_sequence,backbone_primers=backbone_primers,backbone_primers_tm=backbone_primers_tm,backbone_list=backbone_list,data_uri=data_uri,filename=filename,css=css)
+            except Exception as e:
+               logging.error(e)
+               self.redirect("/error")
+
+    #Download XML file
     class ConstructDownloadHandler(Handler):
         def get(self):
             try:
@@ -2210,6 +2333,7 @@ try:
                 logging.error(e)
                 self.redirect("/error")
 
+    #Read in config settings from config page
     class ConfigHandler(Handler):
         def get(self):
             try:
@@ -2266,6 +2390,7 @@ try:
                 logging.error(e)
                 self.redirect("/error")
 
+    #Render error page
     class ErrorHandler(Handler):
         def get(self):
             self.render("error_page.html",css=css)
